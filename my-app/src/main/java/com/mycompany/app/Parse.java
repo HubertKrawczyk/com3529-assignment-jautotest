@@ -12,16 +12,18 @@ import java.util.Scanner;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
 import com.github.javaparser.ast.body.VariableDeclarator;
-
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.IfStmt;
 
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 
 
 /**
@@ -40,7 +42,7 @@ public class Parse
             if(s.charAt(i) == '|'&&bracketsStack ==0){
                 if(firstLine){
                     ar.add(accum);
-                    System.out.println("n: "+accum);
+                    //System.out.println("n: "+accum);
                     accum = "";
                     firstLine = false;
                 }else{
@@ -94,8 +96,18 @@ public class Parse
 
             branchCounter++;
 
-            ((BlockStmt) ifStmt.getChildNodes().get(0)).addStatement(0,
-                StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
+            if(ifStmt.getThenStmt().isExpressionStmt()){
+                // no {} brackets after if, need to replace expressionStmt with blockStmt
+                ExpressionStmt expStmt = ifStmt.getThenStmt().asExpressionStmt().clone();
+                BlockStmt newBlockStmt = StaticJavaParser.parseBlock("{}").addStatement(expStmt);
+                ifStmt.getThenStmt().replace(newBlockStmt);
+            }
+
+            ifStmt.getThenStmt().toBlockStmt().get().addStatement(0,
+            StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
+            
+            // ((BlockStmt) ifStmt.getChildNodes().get(0)).addStatement(0,
+            //     StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
             
             //m.getBody().get().getStatements().addAfter(someExp, ifStmt);
 
@@ -106,8 +118,19 @@ public class Parse
                 } else {
                     // it's an "else-something". Add it.
                     branchCounter++;
-                    ((BlockStmt) ifStmt.getElseStmt().get()).addStatement(0,
+
+                    if(ifStmt.getThenStmt().isExpressionStmt()){
+                        // no {} brackets after else, need to replace expressionStmt with blockStmt
+                        ExpressionStmt expStmt = ifStmt.getElseStmt().get().asExpressionStmt().clone();
+                        BlockStmt newBlockStmt = StaticJavaParser.parseBlock("{}").addStatement(expStmt);
+                        ifStmt.getElseStmt().get().replace(newBlockStmt);
+                    }
+        
+                    ifStmt.getElseStmt().get().toBlockStmt().get().addStatement(0,
                     StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
+
+                    // ((BlockStmt) ifStmt.getElseStmt().get()).addStatement(0,
+                    // StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
                 }
             }
         }

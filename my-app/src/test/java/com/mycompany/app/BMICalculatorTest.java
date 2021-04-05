@@ -13,41 +13,41 @@ public class BMICalculatorTest {
 
     @Test()
     public void test1() {
-        // Object result = BMICalculator.calculate(86.91254087316355, 24, 49);
-        Object result = input.BMICalculator.calculate(86.91254087316355, 24, 49, null, null);
+        // Object result = BMICalculator.calculate(70.32018044250563, 21, 75);
+        Object result = input.BMICalculator.calculate(70.32018044250563, 21, 75, null, null);
         // remove the line above and uncomment upper one to test original code
-        // assertTrue(result==BMICalculator.Type.UNDERWEIGHT)
-        assertTrue(result == input.BMICalculator.Type.UNDERWEIGHT);
+        // assertTrue(result.equals(BMICalculator.Type.UNDERWEIGHT))
+        assertTrue(result.equals(input.BMICalculator.Type.UNDERWEIGHT));
         // remove the line above and uncomment upper one to test original code
     }
 
     @Test()
     public void test2() {
-        // Object result = BMICalculator.calculate(72.3944455650542, 1, 12);
-        Object result = input.BMICalculator.calculate(72.3944455650542, 1, 12, null, null);
+        // Object result = BMICalculator.calculate(95.95515287953866, 3, 12);
+        Object result = input.BMICalculator.calculate(95.95515287953866, 3, 12, null, null);
         // remove the line above and uncomment upper one to test original code
-        // assertTrue(result==BMICalculator.Type.OBESE)
-        assertTrue(result == input.BMICalculator.Type.OBESE);
+        // assertTrue(result.equals(BMICalculator.Type.OVERWEIGHT))
+        assertTrue(result.equals(input.BMICalculator.Type.OVERWEIGHT));
         // remove the line above and uncomment upper one to test original code
     }
 
     @Test()
     public void test3() {
-        // Object result = BMICalculator.calculate(96.91347568038061, 0, 58);
-        Object result = input.BMICalculator.calculate(96.91347568038061, 0, 58, null, null);
+        // Object result = BMICalculator.calculate(84.84701860081329, 1, 13);
+        Object result = input.BMICalculator.calculate(84.84701860081329, 1, 13, null, null);
         // remove the line above and uncomment upper one to test original code
-        // assertTrue(result==BMICalculator.Type.NORMAL)
-        assertTrue(result == input.BMICalculator.Type.NORMAL);
+        // assertTrue(result.equals(BMICalculator.Type.OBESE))
+        assertTrue(result.equals(input.BMICalculator.Type.OBESE));
         // remove the line above and uncomment upper one to test original code
     }
 
     @Test()
     public void test4() {
-        // Object result = BMICalculator.calculate(56.21204508423621, 1, 25);
-        Object result = input.BMICalculator.calculate(56.21204508423621, 1, 25, null, null);
+        // Object result = BMICalculator.calculate(99.69541038187033, 5, 1);
+        Object result = input.BMICalculator.calculate(99.69541038187033, 5, 1, null, null);
         // remove the line above and uncomment upper one to test original code
-        // assertTrue(result==BMICalculator.Type.OVERWEIGHT)
-        assertTrue(result == input.BMICalculator.Type.OVERWEIGHT);
+        // assertTrue(result.equals(BMICalculator.Type.NORMAL))
+        assertTrue(result.equals(input.BMICalculator.Type.NORMAL));
         // remove the line above and uncomment upper one to test original code
     }
 }

@@ -301,13 +301,28 @@ public class GenerateTests {
             methodString += "//Object result = "+testedMethodCallOriginal;
             methodString += "Object result = input."+testedMethodCall;
             methodString += "// remove the line above and uncomment upper one to test original code\n";
-            if(meth.getReturnType().isPrimitive()){
-                methodString += "assertTrue(result=="+outputs.get(i)+");\n";
+
+            if(meth.getReturnType().isPrimitive()|| meth.getReturnType().getName().equals("java.lang.Integer")||
+            meth.getReturnType().getName().equals("java.lang.Boolean")){
+                methodString += "assertTrue(result.equals("+outputs.get(i)+"));\n";
+            } else if(meth.getReturnType().isEnum()){
+                
+                String enumName = meth.getReturnType().getCanonicalName();
+                //DebugUtils.dbgLn(meth.getReturnType().getPackageName());
+                if(meth.getReturnType().getPackageName().equals("input")){
+                    methodString += "//assertTrue(result.equals("+enumName.substring(6)+"."+outputs.get(i)+"))\n";
+                    methodString += "assertTrue(result.equals("+enumName+"."+outputs.get(i)+"));\n";
+                    methodString += "// remove the line above and uncomment upper one to test original code\n";
+                }else{
+                    methodString += "assertTrue(result.equals("+enumName+"."+outputs.get(i)+"));\n";
+                }
+                
+            }else if(meth.getReturnType().getName().equals("java.lang.String")){
+                methodString += "assertTrue(result.equals(\""+outputs.get(i)+"\"));\n";
             }else{
-                methodString += "//assertTrue(result=="+meth.getReturnType().getCanonicalName().substring(6)+"."+outputs.get(i)+")\n";
-                methodString += "assertTrue(result=="+meth.getReturnType().getCanonicalName()+"."+outputs.get(i)+");\n";
-                methodString += "// remove the line above and uncomment upper one to test original code\n";
+                methodString += "//assertTrue(result.equals("+outputs.get(i)+"));\n";
             }
+            
             
             methodString+="}";
 
