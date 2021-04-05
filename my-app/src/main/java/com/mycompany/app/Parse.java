@@ -78,7 +78,10 @@ public class Parse
             // "if" found
 
             String condition = ifStmt.getCondition().toString();
+
             String newCond = "";
+            /*
+            // distinct conjunsts
             List<String> conjuncts = calculateDisjunctions(condition);
 
             //DebugUtils.dbgLn("-Found a condition: "+condition);
@@ -89,8 +92,70 @@ public class Parse
             }
             condCounter++;
             newCond+="coveredCondition(("+conjuncts.get(conjuncts.size()-1)+"), "+condCounter+", coveredConditions) ";
+            */
 
-           
+            //distinct all conditions
+            String accum = "";
+            int accumBracketsCounter =0;
+            for(int i = 0;i<condition.length();i++){
+                char c = condition.charAt(i);
+                if(c ==' '&& accum.equals("")){
+                    //do nothing
+                }
+                else if(c =='&'){
+                    if (!accum.equals("")){
+                        condCounter++;
+                        newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                    }
+                    
+                    if(condition.charAt(i+1)=='&'){
+                        newCond+="&&";
+                        i++;
+                    }else{
+                        newCond+="&";
+                    }
+                    accum="";
+                }else if(c =='|'){
+                    if (!accum.equals("")){
+                        condCounter++;
+                        newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                    }
+                    
+                    if(condition.charAt(i+1)=='|'){
+                        newCond+="||";
+                        i++;
+                    }else{
+                        newCond+="|";
+                    }
+                    
+                    accum="";
+                }else if(c=='('){
+                    if(accum.equals("")){
+                        newCond+=c;
+                    }else{// ( bracket part of condition
+                        accum+=c;
+                        accumBracketsCounter++;
+                    }
+                }else if(c==')'){
+                    if(accumBracketsCounter>0){
+                        accumBracketsCounter--;
+                        accum+=c;
+                    }else{ //the condition finishes here
+                        condCounter++;
+                        newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        newCond+=c;
+                        accum="";
+                    }
+                }else{
+                    accum+=c;
+                }
+            }
+            if (!accum.equals("")){
+                condCounter++;
+                newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+            }
+            
+            //DebugUtils.dbgLn("newCond:"+newCond);
             ifStmt.setCondition(StaticJavaParser.parseExpression(newCond));
             //System.out.println(ifStmt.getCondition());
 
@@ -230,9 +295,12 @@ public class Parse
         "}";
 
         String coveredConditionFuncString = "static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {\n" +
-        "    if (coveredConditions != null && !coveredConditions.contains(id)) {\n"+
-        "        //System.out.println(\"* covered new condition: \" + id);\n"+
-        "        coveredConditions.add(id);\n"+
+        "    if (coveredConditions != null) {\n"+
+        "        if(predicate){\n"+
+        "           if(!coveredConditions.contains(id)){coveredConditions.add(id);}\n"+
+        "        }else{\n"+
+        "           if(!coveredConditions.contains(-id)){coveredConditions.add(-id);}"+
+        "        }"+
         "    }\n"+
         "    return predicate;\n"+
         "}";

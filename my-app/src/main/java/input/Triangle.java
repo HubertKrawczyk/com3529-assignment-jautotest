@@ -60,9 +60,16 @@ public class Triangle {
     }
 
     static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {
-        if (coveredConditions != null && !coveredConditions.contains(id)) {
-            // System.out.println("* covered new condition: " + id);
-            coveredConditions.add(id);
+        if (coveredConditions != null) {
+            if (predicate) {
+                if (!coveredConditions.contains(id)) {
+                    coveredConditions.add(id);
+                }
+            } else {
+                if (!coveredConditions.contains(-id)) {
+                    coveredConditions.add(-id);
+                }
+            }
         }
         return predicate;
     }

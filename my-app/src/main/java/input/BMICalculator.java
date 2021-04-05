@@ -16,10 +16,10 @@ public class BMICalculator {
         if (coveredCondition((bmi < 18.5), 1, coveredConditions)) {
             coveredBranch(1, coveredBranches);
             return Type.UNDERWEIGHT;
-        } else if (coveredCondition((bmi >= 17.5 && bmi < 25), 2, coveredConditions)) {
+        } else if (coveredCondition((bmi >= 17.5), 2, coveredConditions) && coveredCondition((bmi < 25), 3, coveredConditions)) {
             coveredBranch(2, coveredBranches);
             return Type.NORMAL;
-        } else if (coveredCondition((bmi >= 25 && bmi < 30), 3, coveredConditions)) {
+        } else if (coveredCondition((bmi >= 25), 4, coveredConditions) && coveredCondition((bmi < 30), 5, coveredConditions)) {
             coveredBranch(3, coveredBranches);
             return Type.OVERWEIGHT;
         } else {
@@ -36,14 +36,21 @@ public class BMICalculator {
     }
 
     static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {
-        if (coveredConditions != null && !coveredConditions.contains(id)) {
-            // System.out.println("* covered new condition: " + id);
-            coveredConditions.add(id);
+        if (coveredConditions != null) {
+            if (predicate) {
+                if (!coveredConditions.contains(id)) {
+                    coveredConditions.add(id);
+                }
+            } else {
+                if (!coveredConditions.contains(-id)) {
+                    coveredConditions.add(-id);
+                }
+            }
         }
         return predicate;
     }
 
     public static Integer numberOfBranches = 4;
 
-    public static Integer numberOfConditions = 3;
+    public static Integer numberOfConditions = 5;
 }

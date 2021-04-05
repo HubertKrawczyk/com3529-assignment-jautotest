@@ -247,10 +247,14 @@ public class GenerateTests {
         try {
             int numOfBranches = (int)cls.getDeclaredField("numberOfBranches").get(null);
 
-            int numOfConditions = (int)cls.getDeclaredField("numberOfConditions").get(null);
+            int numOfConditions = (int)cls.getDeclaredField("numberOfConditions").get(null)*2;
+
+            int numOfTests = inputs.size();
 
             resultInfo+="Branch coverage: "+(coveredBranches.size()/(double)numOfBranches)*100 +"% ("+coveredBranches.size()+"/"+numOfBranches+")\n";
             resultInfo+="Condition coverage: "+(coveredConditions.size()/(double)numOfConditions)*100 +"% ("+coveredConditions.size()+"/"+numOfConditions+")\n";
+            resultInfo+="Number of tests generated: "+numOfTests+"\n";
+
 
             DebugUtils.dbgLn(resultInfo);
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {

@@ -41,7 +41,7 @@ public class Calendar {
             day2 = daysInMonth(month2, year2);
         }
         // swap dates if year2, month2, day2 is before year1, month1, day1
-        if (coveredCondition(((year2 < year1)), 9, coveredConditions) || coveredCondition(((year2 == year1 && month2 < month1)), 10, coveredConditions) || coveredCondition(((year2 == year1 && month2 == month1 && day2 < day1)), 11, coveredConditions)) {
+        if ((coveredCondition((year2 < year1), 9, coveredConditions)) || (coveredCondition((year2 == year1), 10, coveredConditions) && coveredCondition((month2 < month1), 11, coveredConditions)) || (coveredCondition((year2 == year1), 12, coveredConditions) && coveredCondition((month2 == month1), 13, coveredConditions) && coveredCondition((day2 < day1), 14, coveredConditions))) {
             coveredBranch(9, coveredBranches);
             int t = month2;
             month2 = month1;
@@ -54,14 +54,14 @@ public class Calendar {
             year1 = t;
         }
         // calculate days
-        if (coveredCondition((month1 == month2 && year1 == year2), 12, coveredConditions)) {
+        if (coveredCondition((month1 == month2), 15, coveredConditions) && coveredCondition((year1 == year2), 16, coveredConditions)) {
             coveredBranch(10, coveredBranches);
             days = day2 - day1;
         } else {
             coveredBranch(11, coveredBranches);
             days += daysInMonth(month1, year1) - day1;
             days += day2;
-            if (coveredCondition((year1 == year2), 13, coveredConditions)) {
+            if (coveredCondition((year1 == year2), 17, coveredConditions)) {
                 coveredBranch(12, coveredBranches);
                 int month = month1 + 1;
                 while (month < month2) {
@@ -84,7 +84,7 @@ public class Calendar {
                 year = year1 + 1;
                 while (year < year2) {
                     days += 365;
-                    if (coveredCondition((isLeapYear(year)), 14, coveredConditions)) {
+                    if (coveredCondition((isLeapYear(year)), 18, coveredConditions)) {
                         coveredBranch(14, coveredBranches);
                         days++;
                     }
@@ -112,14 +112,21 @@ public class Calendar {
     }
 
     static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {
-        if (coveredConditions != null && !coveredConditions.contains(id)) {
-            // System.out.println("* covered new condition: " + id);
-            coveredConditions.add(id);
+        if (coveredConditions != null) {
+            if (predicate) {
+                if (!coveredConditions.contains(id)) {
+                    coveredConditions.add(id);
+                }
+            } else {
+                if (!coveredConditions.contains(-id)) {
+                    coveredConditions.add(-id);
+                }
+            }
         }
         return predicate;
     }
 
     public static Integer numberOfBranches = 14;
 
-    public static Integer numberOfConditions = 14;
+    public static Integer numberOfConditions = 18;
 }
