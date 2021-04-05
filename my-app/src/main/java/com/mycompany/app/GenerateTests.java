@@ -301,9 +301,15 @@ public class GenerateTests {
             methodString += "//Object result = "+testedMethodCallOriginal;
             methodString += "Object result = input."+testedMethodCall;
             methodString += "// remove the line above and uncomment upper one to test original code\n";
-            methodString += "// method output: "+outputs.get(i)+"\n";
-            methodString += "assertTrue( true ); // please change the contents of assertation to a condition involving 'result'\n"+
-            "}";
+            if(meth.getReturnType().isPrimitive()){
+                methodString += "assertTrue(result=="+outputs.get(i)+");\n";
+            }else{
+                methodString += "//assertTrue(result=="+meth.getReturnType().getCanonicalName().substring(6)+"."+outputs.get(i)+")\n";
+                methodString += "assertTrue(result=="+meth.getReturnType().getCanonicalName()+"."+outputs.get(i)+");\n";
+                methodString += "// remove the line above and uncomment upper one to test original code\n";
+            }
+            
+            methodString+="}";
 
 
             MethodDeclaration md = StaticJavaParser.parseMethodDeclaration(methodString);
