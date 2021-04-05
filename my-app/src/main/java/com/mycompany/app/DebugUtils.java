@@ -3,13 +3,13 @@ package com.mycompany.app;
 public class DebugUtils {
 
   static boolean printBool = true;
-  public static void dbgLn(String s){
+  public static void dbgLn(Object o){
     if(printBool)
-      System.out.println(s);
+      System.out.println(o);
   }
 
-  public static void dbg(String s){
+  public static void dbg(Object o){
     if(printBool)
-      System.out.print(s);
+      System.out.print(o);
   }
 }

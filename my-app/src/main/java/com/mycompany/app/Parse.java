@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-import java.io.File;  // Import the File class
-import java.io.FileNotFoundException;  // Import this class to handle errors
+import java.io.File; 
+import java.io.FileNotFoundException; 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Scanner; // Import the Scanner class to read text files
+import java.util.Scanner; 
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -200,15 +200,15 @@ public class Parse
         DebugUtils.dbgLn("Adding required code to the class...");
 
         String coveredBranchFuncString = "static void coveredBranch(int id, Set<Integer> coveredBranches) {\n" +
-        "    if (!coveredBranches.contains(id)) {\n"+
-        "        System.out.println(\"* covered new branch: \" + id);\n"+
+        "    if (coveredBranches != null && !coveredBranches.contains(id)) {\n"+
+        "        //System.out.println(\"* covered new branch: \" + id);\n"+
         "        coveredBranches.add(id);\n"+
         "    }\n"+
         "}";
 
         String coveredConditionFuncString = "static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {\n" +
-        "    if (!coveredConditions.contains(id)) {\n"+
-        "        System.out.println(\"* covered new branch: \" + id);\n"+
+        "    if (coveredConditions != null && !coveredConditions.contains(id)) {\n"+
+        "        //System.out.println(\"* covered new condition: \" + id);\n"+
         "        coveredConditions.add(id);\n"+
         "    }\n"+
         "    return predicate;\n"+
@@ -261,7 +261,7 @@ public class Parse
             return;
         }
         
-        DebugUtils.dbgLn("Finished.");
+        DebugUtils.dbgLn("Finished. Next step is using 'GenerateTests', please refer to the manual in Readme.md .");
 
     }
 }

@@ -29,15 +29,15 @@ public class BMICalculator {
     }
 
     static void coveredBranch(int id, Set<Integer> coveredBranches) {
-        if (!coveredBranches.contains(id)) {
-            System.out.println("* covered new branch: " + id);
+        if (coveredBranches != null && !coveredBranches.contains(id)) {
+            // System.out.println("* covered new branch: " + id);
             coveredBranches.add(id);
         }
     }
 
     static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {
-        if (!coveredConditions.contains(id)) {
-            System.out.println("* covered new branch: " + id);
+        if (coveredConditions != null && !coveredConditions.contains(id)) {
+            // System.out.println("* covered new condition: " + id);
             coveredConditions.add(id);
         }
         return predicate;

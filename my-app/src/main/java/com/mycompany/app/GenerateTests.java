@@ -1,5 +1,8 @@
 package com.mycompany.app;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
@@ -7,11 +10,13 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.print.attribute.standard.NumberOfInterveningJobs;
 
-// import com.mycompany.app.DebugUtils;
-// import input.*;
-
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier.Keyword;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.comments.Comment;
 
 public class GenerateTests {
 
@@ -43,19 +48,16 @@ public class GenerateTests {
         }
         DebugUtils.dbgLn("Successfully accessed class '"+originalClassName+"'");
 
-
         // access the method
         Method[] methods = cls.getDeclaredMethods();
         Method meth = null;
         for(Method m : methods){
-        //  System.out.println("testing "+m.getName()+" against "+methodName);
             if(m.getName().equals(methodName) && Modifier.isPublic(m.getModifiers())){
                 meth = m;
                 break;
             }
         }
 
-        //Class inst = new cls.getClass();
         if(meth==null){
             DebugUtils.dbgLn("Method '"+methodName+"'not found!");
             DebugUtils.dbgLn("Exiting...");
@@ -76,7 +78,6 @@ public class GenerateTests {
            
             
             for(int i = 0;i < numberOfParams;i++){
-                //DebugUtils.dbgLn(argsTypes[i].getName());
                 String paramType = argsTypes[i].getName();
                 paramTypes.add(paramType);
                 if(!(paramType.equals("int") || paramType.equals("double") || paramType.equals("boolean") || 
@@ -86,7 +87,6 @@ public class GenerateTests {
                     DebugUtils.dbgLn("Exiting...");
                     return;
                 }
-                // DebugUtils.dbgLn(requiredArgs[i].getClass().);
             }
             DebugUtils.dbgLn("Parameters OK");
             DebugUtils.dbgLn("Number of parameters: "+numberOfParams);
@@ -95,23 +95,36 @@ public class GenerateTests {
             Scanner keyboard = new Scanner(System.in);
             DebugUtils.dbgLn("   Options:");
             DebugUtils.dbgLn("- (1) Enter '1' if random search with upper/lower bounds should be applied");
-            DebugUtils.dbgLn("- (2) Enter '2137' otherwise");
             String keyInput = keyboard.nextLine();
             
+            boolean result = false;
             if(keyInput.equals("1")){
                 DebugUtils.dbgLn("(1) chosen");
-                randomSearch(meth, paramTypes, paramNames);
+                result = randomSearch(meth, cls, paramTypes, paramNames);
             }else{
-                DebugUtils.dbgLn("(2) chosen");
+                DebugUtils.dbgLn("No such option");
+                DebugUtils.dbgLn("Exiting...");
+                keyboard.close();
+                return;
             }
+            
             keyboard.close();
+            if(!result){
+                return; 
+            }
+
         }
 
         
-        DebugUtils.dbgLn("Finished");
+        DebugUtils.dbgLn("Finished.");
     }
 
-    static void randomSearch(Method meth, ArrayList<String> paramTypes, ArrayList<String> paramNames){
+    /**
+     * ask for lower/upper bounds to generate random values
+     * method is tested with random values, inputs that add to the coverage are saved
+     * and later used by "generateTests" to create file with unit tests
+     */
+    static boolean randomSearch(Method meth,  Class<?> cls, ArrayList<String> paramTypes, ArrayList<String> paramNames){
         Scanner keyboard = new Scanner(System.in);
         int numberOfParams = paramTypes.size();
         int[] lowerBoundsInts = new int[numberOfParams];
@@ -131,11 +144,19 @@ public class GenerateTests {
                         lowerBoundsInts[i] = keyboard.nextInt();
                         DebugUtils.dbgLn("Please provide upper int bound");
                         upperBoundsInts[i] = keyboard.nextInt();
+                        if(lowerBoundsInts[i]>upperBoundsInts[i]){
+                            DebugUtils.dbgLn("Error: lower bound cannot be greater than upper bound!");
+                            i--;
+                        }
                     }else if(type.equals("double")){
                         DebugUtils.dbgLn("Please provide lower double bound");
                         lowerBoundsDouble[i] = keyboard.nextDouble();
                         DebugUtils.dbgLn("Please provide upper double bound");
                         upperBoundsDouble[i] = keyboard.nextDouble();
+                        if(lowerBoundsDouble[i]>upperBoundsDouble[i]){
+                            DebugUtils.dbgLn("Error: lower bound cannot be greater than upper bound!");
+                            i--;
+                        }
                     }else if(type.equals("boolean")||type.equals("java.lang.Boolean")){
                         DebugUtils.dbgLn("Next type is boolean, no need for lower/upper bounds");
                     }
@@ -143,49 +164,172 @@ public class GenerateTests {
             }
             DebugUtils.dbgLn("Please specify number of iterations:");
             numOfIterations = keyboard.nextInt();
+            if(numOfIterations<0){
+                DebugUtils.dbgLn("Error: number of iterations must be positive!");
+                DebugUtils.dbgLn("Exiting...");
+                keyboard.close();
+                return false;
+            }
 
         } catch (InputMismatchException e) {
             DebugUtils.dbgLn("Typed wrong value type");
             DebugUtils.dbgLn("Exiting...");
             keyboard.close();
-            return;
+            return false;
         }
 
         TreeSet<Integer> coveredBranches = new TreeSet<Integer>();
         TreeSet<Integer> coveredConditions = new TreeSet<Integer>();
-
-
-
+        int oldCoveredBranchesSize = 0;
+        int oldCoveredConditionsSize = 0;
+        ArrayList<Object[]> successfulInputs = new ArrayList<Object[]>();
+        ArrayList<Object> successfulOutputs= new ArrayList<Object>();
 
         DebugUtils.dbgLn("All set, performing search...");
 
-        int[] chosenInts = new int[numberOfParams];
-        double[] chosenDoubles = new double[numberOfParams];
-        boolean[] chosenBools = new boolean[numberOfParams];
+        int actualNumberOfParams = numberOfParams+2;
 
+        int progressBarSteps = 30;
+        boolean showProgressbar = numOfIterations>10000;
         for(int i=0;i<numOfIterations;i++){
-            DebugUtils.dbgLn(".");
+            Object[] arguments = new Object[actualNumberOfParams];
             for(int j = 0;j<numberOfParams;j++){
                 String type = paramTypes.get(j);
 
                 if(type.equals("int")){
-                    chosenInts[j] = (int) getRandomDouble(lowerBoundsInts[j],upperBoundsInts[j]);
-                    DebugUtils.dbgLn("Chosen int for "+paramNames.get(j)+": "+chosenInts[j]);
+                    arguments[j] = (int) getRandomDouble(lowerBoundsInts[j],upperBoundsInts[j]);
                 }else if(type.equals("double")){
-                    chosenDoubles[j] = getRandomDouble(lowerBoundsDouble[j],upperBoundsDouble[j]);
-                    DebugUtils.dbgLn("Chosen double for "+paramNames.get(j)+": "+chosenDoubles[j]);
+                    arguments[j] = getRandomDouble(lowerBoundsDouble[j],upperBoundsDouble[j]);
                 }else if(type.equals("boolean")||type.equals("java.lang.Boolean")){
-                    chosenBools[j] = Math.random()>0.5;
-                    DebugUtils.dbgLn("Chosen bool for "+paramNames.get(j)+": "+chosenBools[j]);
+                    arguments[j] = Math.random()>0.5;
                 }
             }
+            arguments[actualNumberOfParams-2] = coveredBranches;
+            arguments[actualNumberOfParams-1] = coveredConditions;
+            Object invokeResult;
+            try {
+                invokeResult = meth.invoke(null, arguments);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                e.printStackTrace();
+                keyboard.close();
+                return false;
+            }
+            if(coveredBranches.size()>oldCoveredBranchesSize || coveredConditions.size()>oldCoveredConditionsSize ){
+                oldCoveredBranchesSize=coveredBranches.size();
+                oldCoveredConditionsSize=coveredConditions.size();
+                successfulInputs.add(arguments);
+                successfulOutputs.add(invokeResult);
+            }
+            if(showProgressbar && i % 1000 == 0){
+                double progress = (i+1)/(double)numOfIterations;
+                int barsCompleted = (int)(progressBarSteps*progress);
+                DebugUtils.dbg("["+"=".repeat(barsCompleted)+" ".repeat(progressBarSteps - barsCompleted)+"] "+
+                    String.format("%.2f",progress*100.0,2) +"%\r");
+            }
+            
+            
+        }
+        DebugUtils.dbgLn("\n");
 
+        DebugUtils.dbgLn("Search complete");
+        keyboard.close();
+
+        return generateTests(meth, cls, successfulInputs,successfulOutputs, coveredBranches,coveredConditions);
+    }
+
+    /** 
+     * displays information about the achieved coverages and creates unit tests file
+     */
+    static boolean generateTests(Method meth,  Class<?> cls,ArrayList<Object[]> inputs, ArrayList<Object> outputs,
+    TreeSet<Integer> coveredBranches, TreeSet<Integer> coveredConditions){
+        DebugUtils.dbgLn("--- Information on result achieved ---");
+        String resultInfo = "\n";
+        try {
+            int numOfBranches = (int)cls.getDeclaredField("numberOfBranches").get(null);
+
+            int numOfConditions = (int)cls.getDeclaredField("numberOfConditions").get(null);
+
+            resultInfo+="Branch coverage: "+(coveredBranches.size()/(double)numOfBranches)*100 +"% ("+coveredBranches.size()+"/"+numOfBranches+")\n";
+            resultInfo+="Condition coverage: "+(coveredConditions.size()/(double)numOfConditions)*100 +"% ("+coveredConditions.size()+"/"+numOfConditions+")\n";
+
+            DebugUtils.dbgLn(resultInfo);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        DebugUtils.dbgLn("--- End ---\n");
+
+        DebugUtils.dbgLn("Creating unit test file...");
+
+        // work on a a "blueaprint", add test cases
+        String dataString = 
+        "package com.mycompany.app; // please remove/change this line if used outside of this application\n"+
+
+        "import static org.junit.Assert.assertTrue;\n"+
+        
+        "import org.junit.Test;\n"+
+        
+        "/*lol*/\npublic class " +cls.getSimpleName()+"Test{}";
+
+        CompilationUnit comp = StaticJavaParser.parse(dataString);
+        ClassOrInterfaceDeclaration testCls = comp.getClassByName(cls.getSimpleName()+"Test").get();
+
+        resultInfo+="Test file generated automatically, please check the assertations.\n";
+        Comment clsComment = testCls.getComment().get();
+        clsComment.setContent(resultInfo);
+        testCls.setComment(clsComment);
+
+
+        for(int i=0;i<inputs.size();i++){
+            String methodString =
+            "public void test"+(i+1)+"()\n"+
+            "{\n";
+
+            // first one will work on original code, second on the parsed code used for generating test cases
+            String testedMethodCallOriginal = cls.getSimpleName()+"."+meth.getName()+"(";
+            String testedMethodCall;
+            for (int j =0;j<inputs.get(i).length-2;j++) {
+
+                testedMethodCallOriginal+=inputs.get(i)[j];
+                if(j!=inputs.get(i).length-3){
+                    testedMethodCallOriginal+=", ";
+                }
+            }
+            testedMethodCall = testedMethodCallOriginal+", null, null);\n";
+            testedMethodCallOriginal+=");\n";
+            methodString += "//Object result = "+testedMethodCallOriginal;
+            methodString += "Object result = input."+testedMethodCall;
+            methodString += "// remove the line above and uncomment upper one to test original code\n";
+            methodString += "// method output: "+outputs.get(i)+"\n";
+            methodString += "assertTrue( true ); // please change the contents of assertation to a condition involving 'result'\n"+
+            "}";
+
+
+            MethodDeclaration md = StaticJavaParser.parseMethodDeclaration(methodString);
+            MethodDeclaration newMd = testCls.addMethod("test"+(i+1),Keyword.PUBLIC);
+            newMd.setBody(md.getBody().get());
+            newMd.addAnnotation("Test");
 
         }
 
+        // create the file
+        File file = new File(".\\src\\test\\java\\com\\mycompany\\app\\"+cls.getSimpleName()+"Test.java");
+        try {
+            file.createNewFile();
 
-
-        keyboard.close();
+            FileWriter writer = new FileWriter(file);
+            writer.write(comp.toString());
+            writer.close();
+            DebugUtils.dbgLn("Saved the file successfully.");
+            DebugUtils.dbgLn("File location: "+file.getAbsolutePath());
+        } catch (IOException e) {
+            DebugUtils.dbgLn("An error occured during saving the file");
+            e.printStackTrace();
+            DebugUtils.dbgLn("Exiting...");
+            return false;
+        }
+        return true;
     }
     static double getRandomDouble(double min, double max) {
         return ((Math.random() * (max - min)) + min);
