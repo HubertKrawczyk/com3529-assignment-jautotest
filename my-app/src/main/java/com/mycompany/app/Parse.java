@@ -32,47 +32,48 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
  */
 public class Parse 
 {
-    static List<String> calculateDisjunctions(String s){
-        ArrayList<String> ar = new ArrayList<>();
-        int bracketsStack = 0;
-        boolean firstLine = false;
-        String accum = "";
-        for (int i = 0; i<s.length();i++){
+    // static List<String> calculateDisjunctions(String s){
+    //     ArrayList<String> ar = new ArrayList<>();
+    //     int bracketsStack = 0;
+    //     boolean firstLine = false;
+    //     String accum = "";
+    //     for (int i = 0; i<s.length();i++){
 
-            if(s.charAt(i) == '|'&&bracketsStack ==0){
-                if(firstLine){
-                    ar.add(accum);
-                    //System.out.println("n: "+accum);
-                    accum = "";
-                    firstLine = false;
-                }else{
-                    firstLine = true;
-                }
-            }
+    //         if(s.charAt(i) == '|'&&bracketsStack ==0){
+    //             if(firstLine){
+    //                 ar.add(accum);
+    //                 //System.out.println("n: "+accum);
+    //                 accum = "";
+    //                 firstLine = false;
+    //             }else{
+    //                 firstLine = true;
+    //             }
+    //         }
             
-            else{
-                firstLine = false;
-                accum += s.charAt(i);
-                if(s.charAt(i) == '('){
-                    bracketsStack++;
-                }else if(s.charAt(i) == ')'){
-                    bracketsStack--;
-                }
+    //         else{
+    //             firstLine = false;
+    //             accum += s.charAt(i);
+    //             if(s.charAt(i) == '('){
+    //                 bracketsStack++;
+    //             }else if(s.charAt(i) == ')'){
+    //                 bracketsStack--;
+    //             }
                 
-            }
-        }
-        ar.add(accum);
+    //         }
+    //     }
+    //     ar.add(accum);
 
-        return ar;
-    }
+    //     return ar;
+    // }
 
     /**
      * Inserts coverage functions into the tested method
      */
-    static int[] prepareMethod(MethodDeclaration m, CompilationUnit comp){
+    static int[] prepareMethod(MethodDeclaration m, CompilationUnit comp, ArrayList<Integer[]> branchPredicatesConditions){
         int[] result = new int[2];
         int branchCounter = 0;
         int condCounter = 0;
+        
         //https://github.com/javaparser/javaparser/issues/946 by matozoid 
         for (IfStmt ifStmt : m.findAll(IfStmt.class)) {
             // "if" found
@@ -97,6 +98,7 @@ public class Parse
             //distinct all conditions
             String accum = "";
             int accumBracketsCounter =0;
+            ArrayList<Integer> condCounterForBranch = new ArrayList<Integer>();
             for(int i = 0;i<condition.length();i++){
                 char c = condition.charAt(i);
                 if(c ==' '&& accum.equals("")){
@@ -105,7 +107,8 @@ public class Parse
                 else if(c =='&'){
                     if (!accum.equals("")){
                         condCounter++;
-                        newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        newCond+="CoverageUtils.coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        condCounterForBranch.add(condCounter);
                     }
                     
                     if(condition.charAt(i+1)=='&'){
@@ -118,7 +121,8 @@ public class Parse
                 }else if(c =='|'){
                     if (!accum.equals("")){
                         condCounter++;
-                        newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        newCond+="CoverageUtils.coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        condCounterForBranch.add(condCounter);
                     }
                     
                     if(condition.charAt(i+1)=='|'){
@@ -142,7 +146,8 @@ public class Parse
                         accum+=c;
                     }else{ //the condition finishes here
                         condCounter++;
-                        newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        newCond+="CoverageUtils.coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                        condCounterForBranch.add(condCounter);
                         newCond+=c;
                         accum="";
                     }
@@ -152,7 +157,8 @@ public class Parse
             }
             if (!accum.equals("")){
                 condCounter++;
-                newCond+="coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                newCond+="CoverageUtils.coveredCondition(("+accum+"), "+condCounter+", coveredConditions)";
+                condCounterForBranch.add(condCounter);
             }
             
             //DebugUtils.dbgLn("newCond:"+newCond);
@@ -160,6 +166,10 @@ public class Parse
             //System.out.println(ifStmt.getCondition());
 
             branchCounter++;
+
+            Integer[] conds = new Integer[condCounterForBranch.size()];
+            conds  = condCounterForBranch.toArray(conds);
+            branchPredicatesConditions.add(conds);
 
             if(ifStmt.getThenStmt().isExpressionStmt()){
                 // no {} brackets after if, need to replace expressionStmt with blockStmt
@@ -169,7 +179,7 @@ public class Parse
             }
 
             ifStmt.getThenStmt().toBlockStmt().get().addStatement(0,
-            StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
+            StaticJavaParser.parseExpression("CoverageUtils.coveredBranch("+branchCounter+",coveredBranches)"));
             
             // ((BlockStmt) ifStmt.getChildNodes().get(0)).addStatement(0,
             //     StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
@@ -183,7 +193,8 @@ public class Parse
                 } else {
                     // it's an "else-something". Add it.
                     branchCounter++;
-
+                    conds = new Integer[0];
+                    branchPredicatesConditions.add(conds);
                     if(ifStmt.getThenStmt().isExpressionStmt()){
                         // no {} brackets after else, need to replace expressionStmt with blockStmt
                         ExpressionStmt expStmt = ifStmt.getElseStmt().get().asExpressionStmt().clone();
@@ -192,7 +203,7 @@ public class Parse
                     }
         
                     ifStmt.getElseStmt().get().toBlockStmt().get().addStatement(0,
-                    StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
+                    StaticJavaParser.parseExpression("CoverageUtils.coveredBranch("+branchCounter+",coveredBranches)"));
 
                     // ((BlockStmt) ifStmt.getElseStmt().get()).addStatement(0,
                     // StaticJavaParser.parseExpression("coveredBranch("+branchCounter+",coveredBranches)"));
@@ -253,6 +264,7 @@ public class Parse
 
         CompilationUnit comp = StaticJavaParser.parse(dataString);
         comp.addImport("java.util.Set");
+        comp.addImport("com.mycompany.app.CoverageUtils");
         int branchCounter = 0;
         int condCounter = 0;
         MethodDeclaration testedMethod = null;
@@ -279,50 +291,53 @@ public class Parse
         }else{
             DebugUtils.dbgLn("Loaded the method");
         }
+        ArrayList<Integer[]> branchPredicateConditions = new ArrayList<Integer[]>();
+        int[] result = prepareMethod(testedMethod,comp,branchPredicateConditions);
 
-        int[] result = prepareMethod(testedMethod,comp);
+        DebugUtils.dbgLn("BPC:");
+        DebugUtils.dbgLn(branchPredicateConditions);
         branchCounter = result[0];
         condCounter = result[1];
 
 
         DebugUtils.dbgLn("Adding required code to the class...");
 
-        String coveredBranchFuncString = "static void coveredBranch(int id, Set<Integer> coveredBranches) {\n" +
-        "    if (coveredBranches != null && !coveredBranches.contains(id)) {\n"+
-        "        //System.out.println(\"* covered new branch: \" + id);\n"+
-        "        coveredBranches.add(id);\n"+
-        "    }\n"+
-        "}";
+        // String coveredBranchFuncString = "static void coveredBranch(int id, Set<Integer> coveredBranches) {\n" +
+        // "    if (coveredBranches != null && !coveredBranches.contains(id)) {\n"+
+        // "        //System.out.println(\"* covered new branch: \" + id);\n"+
+        // "        coveredBranches.add(id);\n"+
+        // "    }\n"+
+        // "}";
 
-        String coveredConditionFuncString = "static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {\n" +
-        "    if (coveredConditions != null) {\n"+
-        "        if(predicate){\n"+
-        "           if(!coveredConditions.contains(id)){coveredConditions.add(id);}\n"+
-        "        }else{\n"+
-        "           if(!coveredConditions.contains(-id)){coveredConditions.add(-id);}"+
-        "        }"+
-        "    }\n"+
-        "    return predicate;\n"+
-        "}";
+        // String coveredConditionFuncString = "static boolean coveredCondition(boolean predicate, int id, Set<Integer> coveredConditions) {\n" +
+        // "    if (coveredConditions != null) {\n"+
+        // "        if(predicate){\n"+
+        // "           if(!coveredConditions.contains(id)){coveredConditions.add(id);}\n"+
+        // "        }else{\n"+
+        // "           if(!coveredConditions.contains(-id)){coveredConditions.add(-id);}"+
+        // "        }"+
+        // "    }\n"+
+        // "    return predicate;\n"+
+        // "}";
 
 
-        MethodDeclaration md1 =StaticJavaParser.parseMethodDeclaration(coveredBranchFuncString);
+        // MethodDeclaration md1 =StaticJavaParser.parseMethodDeclaration(coveredBranchFuncString);
 
         ClassOrInterfaceDeclaration c = comp.getClassByName(className).get();
 
-        // add the 2 methods
-        MethodDeclaration newMd = c.addMethod("coveredBranch", Keyword.STATIC);
-        newMd.setBody(md1.getBody().get());
-        newMd.setParameters(md1.getParameters());
+        // // add the 2 methods
+        // MethodDeclaration newMd = c.addMethod("coveredBranch", Keyword.STATIC);
+        // newMd.setBody(md1.getBody().get());
+        // newMd.setParameters(md1.getParameters());
 
 
-        MethodDeclaration md2 = StaticJavaParser.parseMethodDeclaration(coveredConditionFuncString);
+        // MethodDeclaration md2 = StaticJavaParser.parseMethodDeclaration(coveredConditionFuncString);
 
-        newMd = c.addMethod("coveredCondition", Keyword.STATIC);
-        newMd.setType(md2.getType());
-        newMd.setBody(md2.getBody().get());
-        newMd.setModifiers(md2.getModifiers());
-        newMd.setParameters(md2.getParameters());
+        // newMd = c.addMethod("coveredCondition", Keyword.STATIC);
+        // newMd.setType(md2.getType());
+        // newMd.setBody(md2.getBody().get());
+        // newMd.setModifiers(md2.getModifiers());
+        // newMd.setParameters(md2.getParameters());
 
         // add 2 fields telling number of branches and conditions
         FieldDeclaration fd = c.addPublicField(Integer.class, "numberOfBranches");
@@ -332,6 +347,28 @@ public class Parse
         fd = c.addPublicField(Integer.class, "numberOfConditions");
         fd.setStatic(true);
         fd.setVariable(0, new VariableDeclarator(fd.getElementType(), "numberOfConditions = "+condCounter));
+
+        // add field telling which conditions belong to which branch predicates
+        String predicateConditionsString = "{";
+        for(int i=0;i<branchPredicateConditions.size();i++){
+            predicateConditionsString+="{";
+            Integer[] predicate = branchPredicateConditions.get(i);
+            if(predicate.length>0){
+                for(int j=0;j<predicate.length;j++){
+                    predicateConditionsString+=predicate[j];
+                    if(j<predicate.length-1)
+                        predicateConditionsString+=", ";
+                }
+            }
+            predicateConditionsString+="}";
+            if(i<branchPredicateConditions.size()-1)
+                predicateConditionsString+=", ";
+        }
+        predicateConditionsString += "}";
+
+        fd = c.addPublicField("Integer", "branchesPredicatesConditions");
+        fd.setStatic(true);
+        fd.setVariable(0, new VariableDeclarator(fd.getElementType(), "branchesPredicatesConditions[][] = "+predicateConditionsString));
 
         comp.removePackageDeclaration();
         comp.setPackageDeclaration("input");
