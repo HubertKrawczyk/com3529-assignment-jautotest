@@ -294,8 +294,6 @@ public class Parse
         ArrayList<Integer[]> branchPredicateConditions = new ArrayList<Integer[]>();
         int[] result = prepareMethod(testedMethod,comp,branchPredicateConditions);
 
-        DebugUtils.dbgLn("BPC:");
-        DebugUtils.dbgLn(branchPredicateConditions);
         branchCounter = result[0];
         condCounter = result[1];
 

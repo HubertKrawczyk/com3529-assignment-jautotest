@@ -81,9 +81,9 @@ public class GenerateTests {
                 String paramType = argsTypes[i].getName();
                 paramTypes.add(paramType);
                 if(!(paramType.equals("int") || paramType.equals("double") || paramType.equals("boolean") || 
-                paramType.equals("java.lang.Boolean")) ){
+                paramType.equals("java.lang.Boolean") || paramType.equals("java.lang.String"))){
                     DebugUtils.dbgLn("Unsupported parameter type '" +paramType+"'");
-                    DebugUtils.dbgLn("Supported types: int, double, boolean, java.lang.Boolean");
+                    DebugUtils.dbgLn("Supported types: int, double, boolean, java.lang.Boolean, java.lang.String");
                     DebugUtils.dbgLn("Exiting...");
                     return;
                 }
@@ -93,8 +93,9 @@ public class GenerateTests {
             DebugUtils.dbgLn("Parameters types in order: "+paramTypes);
 
             Scanner keyboard = new Scanner(System.in);
-            DebugUtils.dbgLn("   Options:");
+            DebugUtils.dbgLn("   * Options: *");
             DebugUtils.dbgLn("- (1) Enter '1' if random search with upper/lower bounds should be applied");
+            DebugUtils.dbgLn("- * end of options *");
             String keyInput = keyboard.nextLine();
             
             boolean result = false;
@@ -119,6 +120,13 @@ public class GenerateTests {
         DebugUtils.dbgLn("Finished.");
     }
 
+    public enum StringCharTypes {
+        ALPHABET,
+        ALPHABET_AND_DIGITS,
+        DIGITS,
+        ASCII
+    }
+
     /**
      * ask for lower/upper bounds to generate random values
      * method is tested with random values, inputs that add to the coverage are saved
@@ -131,6 +139,7 @@ public class GenerateTests {
         int[] upperBoundsInts = new int[numberOfParams];
         double[] lowerBoundsDouble = new double[numberOfParams];
         double[] upperBoundsDouble = new double[numberOfParams];
+        StringCharTypes[] stringCharTypes = new StringCharTypes[numberOfParams];
 
 
         int numOfIterations = 0;
@@ -138,7 +147,7 @@ public class GenerateTests {
             for(int i = 0;i<numberOfParams;i++){
                 String type = paramTypes.get(i);
                 DebugUtils.dbgLn("Parameter "+(i+1) + "/"+(numberOfParams)+" '"+paramNames.get(i)+"' is of type: "+type);
-                
+                    
                     if(type.equals("int")){
                         DebugUtils.dbgLn("Please provide lower int bound");
                         lowerBoundsInts[i] = keyboard.nextInt();
@@ -159,6 +168,40 @@ public class GenerateTests {
                         }
                     }else if(type.equals("boolean")||type.equals("java.lang.Boolean")){
                         DebugUtils.dbgLn("Next type is boolean, no need for lower/upper bounds");
+                    }else if(type.equals("java.lang.String")){
+                        DebugUtils.dbgLn("Next type is java.lang.String, Strings will be generated randomly, character range as well as min/max string lengths need to be specified.");
+                        DebugUtils.dbgLn("Please character types:\n 1 -> alphabet(upper and lowercase),\n 2 -> alphabet with digits,\n 3 -> digits,\n 4 -> ASCII characters");
+                        int choice = keyboard.nextInt();
+                        switch(choice){
+                            case 1:
+                            stringCharTypes[i] = StringCharTypes.ALPHABET;
+                            break;
+                            case 2:
+                            stringCharTypes[i] = StringCharTypes.ALPHABET_AND_DIGITS;
+                            break;
+                            case 3:
+                            stringCharTypes[i] = StringCharTypes.DIGITS;
+                            break;
+                            case 4:
+                            stringCharTypes[i] = StringCharTypes.ASCII;
+                            break;
+                            default:
+                            DebugUtils.dbgLn("Error: invalid choice");
+                            i--;
+                        }
+                        if(stringCharTypes[i]!=null){
+                            DebugUtils.dbgLn("Please provide min string lenght value");
+                            lowerBoundsInts[i] = keyboard.nextInt();
+                            DebugUtils.dbgLn("Please provide max string lenght value");
+                            upperBoundsInts[i] = keyboard.nextInt();
+                            if(lowerBoundsInts[i]>upperBoundsInts[i]){
+                                DebugUtils.dbgLn("Error: lower bound cannot be greater than upper bound!");
+                                i--;
+                            }else if(lowerBoundsInts[i]<0){
+                                DebugUtils.dbgLn("Error: lower bound cannot be less than 0!");
+                                i--;
+                            }
+                        }
                     }
                 
             }
@@ -202,6 +245,8 @@ public class GenerateTests {
                     arguments[j] = getRandomDouble(lowerBoundsDouble[j],upperBoundsDouble[j]);
                 }else if(type.equals("boolean")||type.equals("java.lang.Boolean")){
                     arguments[j] = Math.random()>0.5;
+                }else if(type.equals("java.lang.String")){
+                    arguments[j] = genRandomString(stringCharTypes[j], lowerBoundsInts[j],upperBoundsInts[j]);
                 }
             }
             arguments[actualNumberOfParams-2] = coveredBranches;
@@ -234,13 +279,42 @@ public class GenerateTests {
         DebugUtils.dbgLn("Search complete");
         keyboard.close();
 
-        return generateTests(meth, cls, successfulInputs,successfulOutputs, coveredBranches,coveredConditions);
+        return generateTests(meth, cls,paramTypes, successfulInputs,successfulOutputs, coveredBranches,coveredConditions);
+    }
+
+    private static String genRandomString(StringCharTypes stringCharType, int min, int max) {
+        String result="";
+        String range = "";
+        switch (stringCharType){
+            case ALPHABET:
+            range = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            break;
+            case ALPHABET_AND_DIGITS:
+            range = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            break;
+            case DIGITS:
+            range = "0123456789";
+            break;
+        }
+        int stringLen = (int)getRandomDouble(min,max);
+        for(int i=0;i<stringLen;i++){
+            if(stringCharType == StringCharTypes.ASCII){
+                char c = (char)(int)getRandomDouble(32, 126);
+                if(c == '"'||c == '\\'){
+                    result+="\\";
+                };
+                result+=c;
+            }else{
+                result+=range.charAt((int)getRandomDouble(0, range.length()-1));
+            }
+        }
+        return result;
     }
 
     /** 
      * displays information about the achieved coverages and creates unit tests file
      */
-    static boolean generateTests(Method meth,  Class<?> cls,ArrayList<Object[]> inputs, ArrayList<Object> outputs,
+    static boolean generateTests(Method meth,  Class<?> cls,ArrayList<String> paramTypes,ArrayList<Object[]> inputs, ArrayList<Object> outputs,
     TreeSet<Integer> coveredBranches, TreeSet<Integer> coveredConditions){
         DebugUtils.dbgLn("--- Information on result achieved ---");
         String resultInfo = "\n";
@@ -293,9 +367,11 @@ public class GenerateTests {
             // first one will work on original code, second on the parsed code used for generating test cases
             String testedMethodCallOriginal = cls.getSimpleName()+"."+meth.getName()+"(";
             String testedMethodCall;
-            for (int j =0;j<inputs.get(i).length-2;j++) {
-
-                testedMethodCallOriginal+=inputs.get(i)[j];
+            for (int j =0;j<inputs.get(i).length-2;j++) { //iterate over num of parameters
+                if(paramTypes.get(j).equals("java.lang.String"))
+                    testedMethodCallOriginal+="\""+inputs.get(i)[j]+"\"";
+                else
+                    testedMethodCallOriginal+=inputs.get(i)[j];
                 if(j!=inputs.get(i).length-3){
                     testedMethodCallOriginal+=", ";
                 }
