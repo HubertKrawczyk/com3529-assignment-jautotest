@@ -6,10 +6,11 @@ import com.mycompany.app.CoverageUtils;
 public class BMICalculatorNonStatic {
 
     public enum Type {
+
         UNDERWEIGHT, NORMAL, OVERWEIGHT, OBESE
     }
 
-    public BMICalculatorNonStatic() {
+    public BMICalculatorNonStatic(char z) {
     }
 
     public Type calculate(double weightInPounds, int heightFeet, int heightInches, Set<Integer> coveredBranches, Set<Integer> coveredConditions) {

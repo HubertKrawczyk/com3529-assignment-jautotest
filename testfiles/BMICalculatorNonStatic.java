@@ -9,7 +9,7 @@ public class BMICalculatorNonStatic {
         OBESE;
     }
 
-    public BMICalculatorNonStatic(){
+    public BMICalculatorNonStatic(char z){
 
     }
 

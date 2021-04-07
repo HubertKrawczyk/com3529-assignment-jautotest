@@ -3,6 +3,7 @@ package com.mycompany.app;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Set;
 
 public abstract class Search {
@@ -18,12 +19,16 @@ public abstract class Search {
   Method testedMethod;
   Class<?> testedClass;
   ArrayList<Object[]> successfulInputs;
+  ArrayList<Object[]> successfulConstructorInputs;
   ArrayList<Object> successfulOutputs;
   Set<Integer> coveredBranches;
   Set<Integer> coveredConditions;
 
   public ArrayList<Object[]> getSuccessfulInputs(){
     return successfulInputs;
+  }
+  public ArrayList<Object[]> getSuccessfulConstructorInputs(){
+    return successfulConstructorInputs;
   }
   public ArrayList<Object> getSuccessfulOutputs(){
     return successfulOutputs;
@@ -33,6 +38,9 @@ public abstract class Search {
   }
   public Set<Integer> getCoveredConditions(){
     return coveredConditions;
+  }
+  public Constructor getChosenConstructor(){
+    return chosenConstructor;
   }
   public Search(Method testedMethod, Class<?> testedClass){
     this.testedClass = testedClass;
@@ -70,5 +78,5 @@ public abstract class Search {
   static double getRandomDouble(double min, double max) {
     return ((Math.random() * (max - min)) + min);
   }
-  public abstract boolean search(Method meth,  Class<?> cls, ArrayList<String> paramTypes, ArrayList<String> paramNames);
+  public abstract boolean search(Scanner keyboard, Method meth,  Class<?> cls, ArrayList<String> paramTypes, ArrayList<String> paramNames);
 }
