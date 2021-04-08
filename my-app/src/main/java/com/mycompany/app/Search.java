@@ -23,6 +23,7 @@ public abstract class Search {
   ArrayList<Object> successfulOutputs;
   Set<Integer> coveredBranches;
   Set<Integer> coveredConditions;
+  Set<Integer> coveredMasterConditions;
 
   public ArrayList<Object[]> getSuccessfulInputs(){
     return successfulInputs;
@@ -38,6 +39,9 @@ public abstract class Search {
   }
   public Set<Integer> getCoveredConditions(){
     return coveredConditions;
+  }
+  public Set<Integer> getCoveredMasterConditions(){
+    return coveredMasterConditions;
   }
   public Constructor getChosenConstructor(){
     return chosenConstructor;

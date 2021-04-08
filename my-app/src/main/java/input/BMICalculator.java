@@ -9,7 +9,7 @@ public class BMICalculator {
 
         UNDERWEIGHT, NORMAL, OVERWEIGHT, OBESE
     }
-    
+
     public static Type calculate(double weightInPounds, int heightFeet, int heightInches, Set<Integer> coveredBranches, Set<Integer> coveredConditions) {
         double weightInKilos = weightInPounds * 0.453592;
         double heightInMeters = ((heightFeet * 12) + heightInches) * .0254;

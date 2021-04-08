@@ -146,6 +146,7 @@ public class GenerateTests {
         ArrayList<Object> outputs = search.getSuccessfulOutputs();
         Set<Integer> coveredBranches = search.getCoveredBranches();
         Set<Integer> coveredConditions = search.getCoveredConditions();
+        Set<Integer> coveredMasterConditions = search.getCoveredMasterConditions();
 
         boolean isStatic = Modifier.isStatic(meth.getModifiers());
 
@@ -164,15 +165,23 @@ public class GenerateTests {
         try {
             int numOfBranches = (int) cls.getDeclaredField("numberOfBranches").get(null);
 
-            int numOfConditions = (int) cls.getDeclaredField("numberOfConditions").get(null) * 2;
+            int numOfConditions = (int) cls.getDeclaredField("numberOfConditions").get(null);
 
             int numOfTests = inputs.size();
 
-            resultInfo += "Branch coverage: " + (coveredBranches.size() / (double) numOfBranches) * 100 + "% ("
+            resultInfo += "Branch coverage: " + String.format("%.2f",(coveredBranches.size() / (double) numOfBranches) * 100,2) + "% ("
                     + coveredBranches.size() + "/" + numOfBranches + ")\n";
-            resultInfo += "Condition coverage: " + (coveredConditions.size() / (double) numOfConditions) * 100 + "% ("
-                    + coveredConditions.size() + "/" + numOfConditions + ")\n";
-            resultInfo += "Number of tests generated: " + numOfTests + "\n";
+            resultInfo += "Branch coverage - covered branches: " + coveredBranches+"\n";
+
+            resultInfo += "\nCondition coverage: " + String.format("%.2f",(coveredConditions.size() / (double) (numOfConditions* 2)) * 100,2) + "% ("
+                    + coveredConditions.size() + "/" + numOfConditions* 2 + ")\n";
+            resultInfo += "Condition coverage - covered conditions: " + coveredConditions+"\n";
+
+            resultInfo += "\nCorrelated MCDC coverage: " + String.format("%.2f",(coveredMasterConditions.size() / (double) numOfConditions) * 100,2) + "% ("
+                    + coveredMasterConditions.size() + "/" + numOfConditions + ")\n";
+            resultInfo += "Correlated MCDC - covered conditions: " + coveredMasterConditions+"\n";
+
+            resultInfo += "\nNumber of tests generated: " + numOfTests + "\n";
 
             DebugUtils.dbgLn(resultInfo);
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {

@@ -6,8 +6,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class RandomSearch extends Search {
@@ -232,16 +234,50 @@ public class RandomSearch extends Search {
         return false;
       }
     }
-    
+
     
 
+    // ArrayList<Object[]> notAddedInputs = new ArrayList<Object[]>();
+    // ArrayList<Object[]> notAddedConstructors = new ArrayList<Object[]>();
+    // ArrayList<Object> unsuccessfulOutputs = new ArrayList<Object>();
 
+    // ArrayList<Integer> notAddedCoveredBranches = new ArrayList<Integer>();
+    // ArrayList<Integer> notAddedCoveredConditions = new ArrayList<Integer>();
+    this.coveredMasterConditions = new TreeSet<Integer>();
+
+    int numOfBranches;
+    int numOfConditions;
+    Integer[][] branchesPredicatesConditions; //e.g. {{1}, {2, 3}, {4, 5}, {}}
+  
+    try {
+      numOfBranches = (int) cls.getDeclaredField("numberOfBranches").get(null);
+      numOfConditions = (int) cls.getDeclaredField("numberOfConditions").get(null);
+      branchesPredicatesConditions = (Integer[][]) cls.getDeclaredField("branchesPredicatesConditions").get(null);
+    } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e2) {
+      e2.printStackTrace();
+      return false;
+    }
+
+    
+    // determine to which branch/predicate each condition belogns to
+    int[] whichPredicate = new int[numOfConditions+1]; //ignore first value, conditions start at 1 not 0
+
+    for(int j=0;j<numOfBranches;j++){
+      Integer[] branchConditions = branchesPredicatesConditions[j];
+      for(int jj=0;jj<branchConditions.length;jj++){
+          whichPredicate[branchConditions[jj]] = j+1;
+      }
+    }
 
     // the actual search
-    this.coveredBranches = new TreeSet<Integer>();
+    this.coveredBranches = new TreeSet<Integer>(); //also tells which branchPredicates were true
     this.coveredConditions = new TreeSet<Integer>();
-    int oldCoveredBranchesSize = 0;
-    int oldCoveredConditionsSize = 0;
+    // keep track of predicates and conditions results for each saved run and unsaved (for cMCDC)
+    ArrayList<TreeSet<Integer>> successfulCoveredBranchesArchive = new ArrayList<TreeSet<Integer>>();
+    // ArrayList<TreeSet<Integer>> unsuccessfulCoveredBranchesArchive = new ArrayList<TreeSet<Integer>>();
+    ArrayList<TreeSet<Integer>> successfulCoveredConditionsArchive = new ArrayList<TreeSet<Integer>>();
+    // ArrayList<TreeSet<Integer>> unsuccessfulCoveredConditionsArchive = new ArrayList<TreeSet<Integer>>();
+
     this.successfulInputs = new ArrayList<Object[]>();
     if(!isStatic){
       this.successfulConstructorInputs = new ArrayList<Object[]>();
@@ -254,32 +290,19 @@ public class RandomSearch extends Search {
 
     int progressBarSteps = 30;
     boolean showProgressbar = numOfIterations > 10000;
-    for (int i = 0; i < numOfIterations; i++) {
+
+
+    for (int i = 0; i < numOfIterations; i++) { ///////////////////
       Object invokedObject = null;
-      Object[] constructorArguments = new Object[chosenConstructor.getParameterCount()];
+      Object[] constructorArguments = null;
       if(!isStatic){
+        constructorArguments = new Object[chosenConstructor.getParameterCount()];
         for (int j = 0; j < chosenConstructor.getParameterCount(); j++) {
           String type = constructorParamTypes.get(j);
 
-          if (type.equals("int")) {
-            constructorArguments[j] = (int) getRandomDouble(constructorLowerBoundsInts[j], constructorUpperBoundsInts[j]);
-          } else if (type.equals("byte")) {
-            constructorArguments[j] = (byte) getRandomDouble(constructorLowerBoundsDouble[j], constructorUpperBoundsDouble[j]);
-          } else if (type.equals("short")) {
-            constructorArguments[j] = (short) getRandomDouble(constructorLowerBoundsDouble[j], constructorUpperBoundsDouble[j]);
-          } else if (type.equals("double")) {
-            constructorArguments[j] = getRandomDouble(constructorLowerBoundsDouble[j], constructorUpperBoundsDouble[j]);
-          } else if (type.equals("float")) {
-            constructorArguments[j] = (float) getRandomDouble(constructorLowerBoundsDouble[j], constructorUpperBoundsDouble[j]);
-          } else if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
-            constructorArguments[j] = Math.random() > 0.5;
-          } else if (type.equals("java.lang.String")) {
-            constructorArguments[j] = genRandomString(constructorStringCharTypes[j], constructorLowerBoundsInts[j], constructorUpperBoundsInts[j]);
-          } else if (type.equals("char")) {
-            constructorArguments[j] = (char)(int)getRandomDouble(constructorLowerBoundsInts[j], constructorUpperBoundsInts[j]);
-          } else {
-            constructorArguments[j] = null;
-          }
+          constructorArguments[j] = deriveRandomValue(type, constructorLowerBoundsInts[j], constructorUpperBoundsInts[j], constructorLowerBoundsDouble[j], constructorUpperBoundsDouble[j],
+          constructorStringCharTypes[j]);
+
         }
         try {
           invokedObject = chosenConstructor.newInstance(constructorArguments);
@@ -294,23 +317,14 @@ public class RandomSearch extends Search {
       Object[] arguments = new Object[actualNumberOfParams];
       for (int j = 0; j < numberOfParams; j++) {
         String type = paramTypes.get(j);
-
-        if (type.equals("int")) {
-          arguments[j] = (int) getRandomDouble(paramsLowerBoundsInts[j], paramsUpperBoundsInts[j]);
-        } else if (type.equals("double")) {
-          arguments[j] = getRandomDouble(paramsLowerBoundsDouble[j], paramsUpperBoundsDouble[j]);
-        } else if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
-          arguments[j] = Math.random() > 0.5;
-        } else if (type.equals("java.lang.String")) {
-          arguments[j] = genRandomString(paramsStringCharTypes[j], paramsLowerBoundsInts[j], paramsUpperBoundsInts[j]);
-        } else if (type.equals("char")) {
-          constructorArguments[j] = (char)(int)getRandomDouble(paramsLowerBoundsInts[j], paramsUpperBoundsInts[j]);
-        } else{
-          arguments[j] = null;
-        }
+        
+        arguments[j] = deriveRandomValue(type, paramsLowerBoundsInts[j], paramsUpperBoundsInts[j], paramsLowerBoundsDouble[j], paramsUpperBoundsDouble[j],
+        paramsStringCharTypes[j]);
       }
-      arguments[actualNumberOfParams - 2] = coveredBranches;
-      arguments[actualNumberOfParams - 1] = coveredConditions;
+      TreeSet<Integer> newCoveredBranches = new TreeSet<Integer>();
+      TreeSet<Integer> newCoveredConditions = new TreeSet<Integer>();
+      arguments[actualNumberOfParams - 2] =  newCoveredBranches;
+      arguments[actualNumberOfParams - 1] = newCoveredConditions;
       Object invokeResult;
       try {
         invokeResult = meth.invoke(invokedObject, arguments);
@@ -318,13 +332,123 @@ public class RandomSearch extends Search {
         e.printStackTrace();
         return false;
       }
-      if (coveredBranches.size() > oldCoveredBranchesSize || coveredConditions.size() > oldCoveredConditionsSize) {
-        oldCoveredBranchesSize = coveredBranches.size();
-        oldCoveredConditionsSize = coveredConditions.size();
-        successfulInputs.add(arguments);
-        successfulConstructorInputs.add(constructorArguments);
-        successfulOutputs.add(invokeResult);
+      boolean toBeAdded = false;
+    
+
+      // check for new cMCDC coverage
+      
+      for (int condition=1;condition<numOfConditions+1;condition++) { //loop over the all conditions
+        // check if the condition was ever reached in this run (and thus evalueted true or false)
+        if(coveredConditions.contains(condition)|| coveredConditions.contains(-condition)){
+
+          // check if this master condition is not already covered
+          if(!coveredMasterConditions.contains(Math.abs(condition))){
+
+
+            // first check all saved runs
+            for(int j=0;j<successfulInputs.size();j++){
+
+              Integer negCondition = -condition;
+              // check if the same condition was evaluated differently
+              if(successfulCoveredConditionsArchive.get(j).contains(negCondition)){
+                // did it change the overall predicate
+                if(coveredBranches.contains(whichPredicate[Math.abs(condition)])){ //in this run predicate was evaluated true
+                  if(!successfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])){
+                    // success
+                    toBeAdded = true;
+                    coveredMasterConditions.add(condition);
+                    break;
+                  }
+                }else{ //in this run predicate was evaluated false (did not reach this branch-block)
+                  if(successfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])){
+                    // success
+                    toBeAdded = true;
+                    coveredMasterConditions.add(condition);
+                    break;
+                  }
+                }
+              }
+            }
+            // if(!toBeAdded){
+            //   // do the same for all not saved runs
+            //   for(int j=0;j<notAddedInputs.size();j++){
+
+            //     Integer negCondition = -condition;
+            //     // check if the same condition was evaluated differently
+            //     if(unsuccessfulCoveredConditionsArchive.get(j).contains(negCondition)){
+            //       // did it change the overall predicate
+            //       if(coveredBranches.contains(whichPredicate[Math.abs(condition)])){ //in this run predicate was evaluated true
+            //         if(!unsuccessfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])){
+            //           // success
+            //           toBeAdded = true;
+            //         }
+            //       }else{ //in this run predicate was evaluated false (did not reach this branch-block)
+            //         if(unsuccessfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])){
+            //           // success
+            //           toBeAdded = true;
+            //         }
+            //       }
+            //       if(toBeAdded){
+            //         coveredMasterConditions.add(condition);
+
+            //         coveredBranches.addAll(unsuccessfulCoveredBranchesArchive.remove(j));
+            //         coveredConditions.addAll(unsuccessfulCoveredConditionsArchive.remove(j));
+
+            //         successfulInputs.add(notAddedInputs.remove(j));
+            //         if(!isStatic){
+            //           successfulConstructorInputs.add(notAddedConstructors.remove(j));
+            //         }
+                    
+            //         successfulOutputs.add(unsuccessfulOutputs.remove(j));
+
+            //         successfulCoveredBranchesArchive.add(unsuccessfulCoveredBranchesArchive.remove(j));
+            //         successfulCoveredConditionsArchive.add(unsuccessfulCoveredConditionsArchive.remove(j));
+                    
+            //         break;
+            //       }
+            //     }
+            //   }
+            // }
+          }
+        }
+
       }
+
+      if (toBeAdded || addsNewElements(coveredBranches, newCoveredBranches) || addsNewElements(coveredConditions, newCoveredConditions)) {
+        coveredBranches.addAll(newCoveredBranches);
+        coveredConditions.addAll(newCoveredConditions);
+
+        successfulInputs.add(arguments);
+        if(!isStatic){
+          successfulConstructorInputs.add(constructorArguments);
+        }
+        
+        successfulOutputs.add(invokeResult);
+
+        successfulCoveredBranchesArchive.add(newCoveredBranches);
+        successfulCoveredConditionsArchive.add(newCoveredConditions);
+        DebugUtils.dbg("Added input:");
+        for (int argNo = 0; argNo<arguments.length-2;argNo++) {
+          DebugUtils.dbg(arguments[argNo]);
+          if(argNo<arguments.length-3){
+            DebugUtils.dbg(", ");
+          }
+        }
+        DebugUtils.dbgLn(".");
+
+      } 
+      // else {
+      //   notAddedInputs.add(arguments);
+      //   if(!isStatic){
+      //     notAddedConstructors.add(constructorArguments);
+      //   }
+        
+      //   unsuccessfulOutputs.add(invokeResult);
+
+      //   unsuccessfulCoveredBranchesArchive.add(newCoveredBranches);
+      //   unsuccessfulCoveredConditionsArchive.add(newCoveredConditions);
+      // }
+
       if (showProgressbar && i % 1000 == 0) {
         double progress = (i + 1) / (double) numOfIterations;
         int barsCompleted = (int) (progressBarSteps * progress);
@@ -337,6 +461,41 @@ public class RandomSearch extends Search {
 
     DebugUtils.dbgLn("Search complete");
     return true;
+  }
+
+  /**
+   * Checks if set a doesnt contain any element from set b
+   */
+  static boolean addsNewElements(Collection<?> a, Collection<?> b){
+    for (Object element : b) {
+      if(!a.contains(element)){
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  static Object deriveRandomValue(String type, int constructorLowerBoundInt, int constructorUpperBoundInt, double constructorLowerBoundDouble, double constructorUpperBoundDouble, StringCharTypes constructorStringCharType){
+    if (type.equals("int")) {
+      return (int) getRandomDouble(constructorLowerBoundInt, constructorUpperBoundInt);
+    } else if (type.equals("byte")) {
+      return (byte) getRandomDouble(constructorLowerBoundDouble, constructorUpperBoundDouble);
+    } else if (type.equals("short")) {
+      return (short) getRandomDouble(constructorLowerBoundDouble, constructorUpperBoundDouble);
+    } else if (type.equals("double")) {
+      return getRandomDouble(constructorLowerBoundDouble, constructorUpperBoundDouble);
+    } else if (type.equals("float")) {
+      return (float) getRandomDouble(constructorLowerBoundDouble, constructorUpperBoundDouble);
+    } else if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
+      return Math.random() > 0.5;
+    } else if (type.equals("java.lang.String")) {
+      return genRandomString(constructorStringCharType, constructorLowerBoundInt, constructorUpperBoundInt);
+    } else if (type.equals("char")) {
+      return (char)(int)getRandomDouble(constructorLowerBoundInt, constructorUpperBoundInt);
+    } else {
+      return null;
+    }
   }
 
 }
