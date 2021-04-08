@@ -236,13 +236,6 @@ public class RandomSearch extends Search {
     }
 
     
-
-    // ArrayList<Object[]> notAddedInputs = new ArrayList<Object[]>();
-    // ArrayList<Object[]> notAddedConstructors = new ArrayList<Object[]>();
-    // ArrayList<Object> unsuccessfulOutputs = new ArrayList<Object>();
-
-    // ArrayList<Integer> notAddedCoveredBranches = new ArrayList<Integer>();
-    // ArrayList<Integer> notAddedCoveredConditions = new ArrayList<Integer>();
     this.coveredMasterConditions = new TreeSet<Integer>();
 
     int numOfBranches;
@@ -272,11 +265,9 @@ public class RandomSearch extends Search {
     // the actual search
     this.coveredBranches = new TreeSet<Integer>(); //also tells which branchPredicates were true
     this.coveredConditions = new TreeSet<Integer>();
-    // keep track of predicates and conditions results for each saved run and unsaved (for cMCDC)
+    // keep track of predicates and conditions results for each saved run (for cMCDC)
     ArrayList<TreeSet<Integer>> successfulCoveredBranchesArchive = new ArrayList<TreeSet<Integer>>();
-    // ArrayList<TreeSet<Integer>> unsuccessfulCoveredBranchesArchive = new ArrayList<TreeSet<Integer>>();
     ArrayList<TreeSet<Integer>> successfulCoveredConditionsArchive = new ArrayList<TreeSet<Integer>>();
-    // ArrayList<TreeSet<Integer>> unsuccessfulCoveredConditionsArchive = new ArrayList<TreeSet<Integer>>();
 
     this.successfulInputs = new ArrayList<Object[]>();
     if(!isStatic){
@@ -317,7 +308,7 @@ public class RandomSearch extends Search {
       Object[] arguments = new Object[actualNumberOfParams];
       for (int j = 0; j < numberOfParams; j++) {
         String type = paramTypes.get(j);
-        
+
         arguments[j] = deriveRandomValue(type, paramsLowerBoundsInts[j], paramsUpperBoundsInts[j], paramsLowerBoundsDouble[j], paramsUpperBoundsDouble[j],
         paramsStringCharTypes[j]);
       }
@@ -369,46 +360,7 @@ public class RandomSearch extends Search {
                 }
               }
             }
-            // if(!toBeAdded){
-            //   // do the same for all not saved runs
-            //   for(int j=0;j<notAddedInputs.size();j++){
 
-            //     Integer negCondition = -condition;
-            //     // check if the same condition was evaluated differently
-            //     if(unsuccessfulCoveredConditionsArchive.get(j).contains(negCondition)){
-            //       // did it change the overall predicate
-            //       if(coveredBranches.contains(whichPredicate[Math.abs(condition)])){ //in this run predicate was evaluated true
-            //         if(!unsuccessfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])){
-            //           // success
-            //           toBeAdded = true;
-            //         }
-            //       }else{ //in this run predicate was evaluated false (did not reach this branch-block)
-            //         if(unsuccessfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])){
-            //           // success
-            //           toBeAdded = true;
-            //         }
-            //       }
-            //       if(toBeAdded){
-            //         coveredMasterConditions.add(condition);
-
-            //         coveredBranches.addAll(unsuccessfulCoveredBranchesArchive.remove(j));
-            //         coveredConditions.addAll(unsuccessfulCoveredConditionsArchive.remove(j));
-
-            //         successfulInputs.add(notAddedInputs.remove(j));
-            //         if(!isStatic){
-            //           successfulConstructorInputs.add(notAddedConstructors.remove(j));
-            //         }
-                    
-            //         successfulOutputs.add(unsuccessfulOutputs.remove(j));
-
-            //         successfulCoveredBranchesArchive.add(unsuccessfulCoveredBranchesArchive.remove(j));
-            //         successfulCoveredConditionsArchive.add(unsuccessfulCoveredConditionsArchive.remove(j));
-                    
-            //         break;
-            //       }
-            //     }
-            //   }
-            // }
           }
         }
 
@@ -437,17 +389,7 @@ public class RandomSearch extends Search {
         DebugUtils.dbgLn(".");
 
       } 
-      // else {
-      //   notAddedInputs.add(arguments);
-      //   if(!isStatic){
-      //     notAddedConstructors.add(constructorArguments);
-      //   }
-        
-      //   unsuccessfulOutputs.add(invokeResult);
 
-      //   unsuccessfulCoveredBranchesArchive.add(newCoveredBranches);
-      //   unsuccessfulCoveredConditionsArchive.add(newCoveredConditions);
-      // }
 
       if (showProgressbar && i % 1000 == 0) {
         double progress = (i + 1) / (double) numOfIterations;
