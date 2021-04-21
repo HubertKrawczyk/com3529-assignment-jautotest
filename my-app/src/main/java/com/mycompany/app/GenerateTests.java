@@ -4,18 +4,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.InputMismatchException;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeSet;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.Comment;
 
 
@@ -25,6 +26,7 @@ public class GenerateTests {
 
         if (args.length != 2) {
             DebugUtils.printLn("ERROR: Please provide class name and method name as arguments!");
+            DebugUtils.printLn("README contains neccessary instructions");
             DebugUtils.printLn("Exiting...");
             return;
         }
@@ -33,8 +35,16 @@ public class GenerateTests {
         DebugUtils.printLn("className: " + originalClassName);
 
         String className = "input." + originalClassName;
-
         String methodName = args[1];
+        String[] inputMethodParameters = null;
+
+        if (methodName.indexOf("(") != -1) { // user specified method parameters
+            inputMethodParameters = methodName.substring(methodName.indexOf("(") + 1, methodName.indexOf(")"))
+                    .split(", |,");
+            methodName = methodName.substring(0, methodName.indexOf("("));
+
+        }
+
         DebugUtils.printLn("methodName: " + methodName);
         DebugUtils.printLn("");
 
@@ -44,6 +54,7 @@ public class GenerateTests {
             cls = Class.forName(className);
         } catch (ClassNotFoundException e) {
             DebugUtils.printLn("ERROR: Invalid className, please parse the correct class file first!");
+            DebugUtils.printLn("README contains neccessary instructions");
             DebugUtils.printLn("Exiting...");
             return;
         }
@@ -51,25 +62,46 @@ public class GenerateTests {
 
         // access the method
         Method[] methods = cls.getDeclaredMethods();
-        Method meth = null;
+        Method testedMethod = null;
         for (Method m : methods) {
             if (m.getName().equals(methodName) && Modifier.isPublic(m.getModifiers())) {
-                meth = m;
-                break;
+                if(inputMethodParameters==null) {  
+                    testedMethod = m;
+                    break;
+                } else if (m.getParameters().length - 2 == inputMethodParameters.length) {
+                    // test if the parameters match
+                    boolean paramsMatch = true;
+                    Parameter[] methodParams = m.getParameters();
+
+                    for (int i = 0; i < methodParams.length - 2 ; i++) {
+                        if (!methodParams[i].toString().equals(inputMethodParameters[i])) {
+                            paramsMatch = false;
+                        }
+                    }
+                    if (paramsMatch) {
+                        testedMethod = m;
+                        break;
+                    }
+                }
             }
         }
 
-        if (meth == null) {
-            DebugUtils.printLn("Public method '" + methodName + "'not found!");
+        if (testedMethod == null) {
+            if (inputMethodParameters == null) {
+                DebugUtils.printLn("No public method called '" + methodName + "' found");
+            } else {
+                DebugUtils.printLn("No public method called '" + methodName + "' with given parameters found");
+            }
+            DebugUtils.printLn("README contains neccessary instructions");
             DebugUtils.printLn("Exiting...");
             return;
         } else {
             DebugUtils.printLn("Successfully accessed public method '" + methodName + "', parameter check...");
-            if (!Modifier.isStatic(meth.getModifiers())){
+            if (!Modifier.isStatic(testedMethod.getModifiers())){
                 DebugUtils.printLn("Method is not static, providing constructor parameters may be neccessary");
             }
-            Class<?>[] argsTypes = meth.getParameterTypes();
-            Parameter[] params = meth.getParameters();
+            Class<?>[] argsTypes = testedMethod.getParameterTypes();
+            Parameter[] params = testedMethod.getParameters();
             ArrayList<String> paramNames = new ArrayList<String>();
             ArrayList<String> paramTypes = new ArrayList<String>();
 
@@ -108,12 +140,12 @@ public class GenerateTests {
             Search search;
             if (keyInput.equals("1")) {
                 DebugUtils.printLn("(1) chosen");
-                search = new RandomSearch(meth, cls);
+                search = new RandomSearch(testedMethod, cls);
                 if (!search.search(keyboard)) {
                     keyboard.close();
                     return;
                 }
-                if(!generateTests(meth, cls, paramTypes, search)){
+                if(!generateTests(testedMethod, cls, paramTypes, search)){
                     keyboard.close();
                     return;
                 }
@@ -195,13 +227,17 @@ public class GenerateTests {
                 "package com.mycompany.app; // please remove/change this line if used outside of this application\n"+
                 "import static org.junit.Assert.assertTrue;\n" +
                 "import org.junit.Test;\n" +
-                "/*comment*/public class " + testClassName + "{}";
+                "public class " + testClassName + "{}";
 
         CompilationUnit comp = StaticJavaParser.parse(dataString);
         ClassOrInterfaceDeclaration testCls = comp.getClassByName(testClassName).get();
 
-        resultInfo += "Test file generated automatically, please check the assertations.\n";
-        Comment clsComment = testCls.getComment().get();
+        // https://stackabuse.com/how-to-get-current-date-and-time-in-java/
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        
+        resultInfo += "Test file generated automatically at "+ formatter.format(date) + ", please check the assertations.\n";
+        Comment clsComment = new BlockComment();
         clsComment.setContent(resultInfo);
         testCls.setComment(clsComment);
 
@@ -280,7 +316,8 @@ public class GenerateTests {
         }
 
         // create the file
-        File file = new File(".\\src\\test\\java\\com\\mycompany\\app\\" + testClassName + ".java");
+        char separator = File.separatorChar;
+        File file = new File("."+separator+"src"+separator+"test"+separator+"java"+separator+"com"+separator+"mycompany"+separator+"app"+separator + testClassName + ".java");
         try {
             file.createNewFile();
 

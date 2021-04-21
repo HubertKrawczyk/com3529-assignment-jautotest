@@ -1,24 +1,26 @@
 package com.mycompany.app;
 
 import java.util.ArrayList;
-import java.util.List;
-
+import java.util.Date;
+import java.util.NoSuchElementException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Scanner;
 
+import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.Modifier.Keyword;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
-
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.comments.BlockComment;
+import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.stmt.IfStmt;
 
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -33,12 +35,10 @@ public class Parse {
     /**
      * Inserts coverage methods into the tested method
      * @param methodDeclaration Method Declaration
-     * @param comp Compilation Unit
      * @branchPredicatesConditions An array which will be filled with values telling to which predicate each condition belongs
      * @return an array with two values: 1st->number of branches in the method, 2nd -> number of conditions in the method
      */
-    static int[] prepareMethod(MethodDeclaration methodDeclaration, CompilationUnit comp,
-        ArrayList<Integer[]> branchPredicatesConditions) {
+    static int[] prepareMethod(MethodDeclaration methodDeclaration, ArrayList<Integer[]> branchPredicatesConditions) {
         int[] result = new int[2];
         int branchCounter = 0;
         int condCounter = 0;
@@ -63,7 +63,8 @@ public class Parse {
                 } else if (c == '&') {
                     if (!accum.equals("")) {
                         condCounter++;
-                        newCond += "CoverageUtils.coveredCondition((" + accum + "), " + condCounter
+                        newCond += Parse.class.getPackageName()
+                            + ".CoverageUtils.coveredCondition((" + accum + "), " + condCounter
                                 + ", coveredConditions)";
                         conditionsForBranch.add(condCounter);
                     }
@@ -78,7 +79,8 @@ public class Parse {
                 } else if (c == '|') {
                     if (!accum.equals("")) {
                         condCounter++;
-                        newCond += "CoverageUtils.coveredCondition((" + accum + "), " + condCounter
+                        newCond += Parse.class.getPackageName()
+                            + ".CoverageUtils.coveredCondition((" + accum + "), " + condCounter
                                 + ", coveredConditions)";
                         conditionsForBranch.add(condCounter);
                     }
@@ -104,7 +106,8 @@ public class Parse {
                         accum += c;
                     } else { // the condition finishes here
                         condCounter++;
-                        newCond += "CoverageUtils.coveredCondition((" + accum + "), " + condCounter
+                        newCond += Parse.class.getPackageName()
+                            + ".CoverageUtils.coveredCondition((" + accum + "), " + condCounter
                                 + ", coveredConditions)";
                         conditionsForBranch.add(condCounter);
                         newCond += c;
@@ -116,7 +119,8 @@ public class Parse {
             }
             if (!accum.equals("")) {
                 condCounter++;
-                newCond += "CoverageUtils.coveredCondition((" + accum + "), " + condCounter + ", coveredConditions)";
+                newCond += Parse.class.getPackageName()
+                    + ".CoverageUtils.coveredCondition((" + accum + "), " + condCounter + ", coveredConditions)";
                 conditionsForBranch.add(condCounter);
             }
 
@@ -130,13 +134,13 @@ public class Parse {
             if (ifStmt.getThenStmt().isExpressionStmt()) {
                 // no '{}'' brackets after if, need to replace the expressionStmt with blockStmt
                 ExpressionStmt expStmt = ifStmt.getThenStmt().asExpressionStmt().clone();
-                BlockStmt newBlockStmt = StaticJavaParser.parseBlock("{}").addStatement(expStmt);
+                BlockStmt newBlockStmt = new BlockStmt().addStatement(expStmt);
                 ifStmt.getThenStmt().replace(newBlockStmt);
             }
 
             // add coveredBranch method to the blockStmt
             ifStmt.getThenStmt().toBlockStmt().get().addStatement(0, StaticJavaParser
-                    .parseExpression("CoverageUtils.coveredBranch(" + branchCounter + ",coveredBranches)"));
+                    .parseExpression(Parse.class.getPackageName()+".CoverageUtils.coveredBranch(" + branchCounter + ",coveredBranches)"));
 
 
             if (ifStmt.getElseStmt().isPresent()) {
@@ -151,20 +155,21 @@ public class Parse {
                     if (ifStmt.getThenStmt().isExpressionStmt()) {
                         // no '{}' brackets after else, need to replace expressionStmt with blockStmt
                         ExpressionStmt expStmt = ifStmt.getElseStmt().get().asExpressionStmt().clone();
-                        BlockStmt newBlockStmt = StaticJavaParser.parseBlock("{}").addStatement(expStmt);
+                        BlockStmt newBlockStmt = new BlockStmt().addStatement(expStmt);
                         ifStmt.getElseStmt().get().replace(newBlockStmt);
                     }
 
                     // add coveredBranch method to the blockStmt
                     ifStmt.getElseStmt().get().toBlockStmt().get().addStatement(0, StaticJavaParser
-                            .parseExpression("CoverageUtils.coveredBranch(" + branchCounter + ",coveredBranches)"));
+                            .parseExpression(Parse.class.getPackageName()
+                            + ".CoverageUtils.coveredBranch(" + branchCounter + ",coveredBranches)"));
 
                 }
             }
         }
 
-        methodDeclaration.addParameter("Set<Integer>", "coveredBranches");
-        methodDeclaration.addParameter("Set<Integer>", "coveredConditions");
+        methodDeclaration.addParameter("java.util.Set<Integer>", "coveredBranches");
+        methodDeclaration.addParameter("java.util.Set<Integer>", "coveredConditions");
 
         DebugUtils.printLn("Method parsed successfully");
         result[0] = branchCounter;
@@ -178,13 +183,21 @@ public class Parse {
         String dataString = "";
         String methodName = "";
         String className = "";
+        String[] inputMethodParameters = null;
         if (args.length == 3) {
             String path = args[0];
             className = args[1];
             methodName = args[2];
+
+            if (methodName.indexOf("(")!=-1){ // user specified method parameters
+              inputMethodParameters = methodName.substring(methodName.indexOf("(")+1, methodName.indexOf(")")).split(", |,");
+              methodName=methodName.substring(0, methodName.indexOf("("));
+
+            }
             DebugUtils.printLn("file path: '" + path + "'");
             DebugUtils.printLn("class name: '" + className + "'");
             DebugUtils.printLn("method name: '" + methodName + "'");
+            
 
             try {
                 DebugUtils.print("Reading the file...");
@@ -193,7 +206,6 @@ public class Parse {
                 while (myReader.hasNextLine()) {
                     DebugUtils.print(".");
                     String data = myReader.nextLine();
-                    // System.out.println(data);
                     dataString += data + "\n";
                 }
                 DebugUtils.printLn("done");
@@ -210,45 +222,93 @@ public class Parse {
             return;
         }
 
-        CompilationUnit comp = StaticJavaParser.parse(dataString);
-        comp.addImport("java.util.Set");
-        comp.addImport("com.mycompany.app.CoverageUtils");
+        CompilationUnit comp = null;
+        try {
+            comp = StaticJavaParser.parse(dataString);
+        } catch (ParseProblemException e) {
+            DebugUtils.printLn("Problem occured during processing the file:\n" + e.getMessage());
+            DebugUtils.printLn("Exiting...");
+            return;
+        }
+        
+
         int branchCounter = 0;
         int condCounter = 0;
+
+        ClassOrInterfaceDeclaration cls = null;
+        try {
+            cls = comp.getClassByName(className).get();
+        } catch (NoSuchElementException e) {
+            DebugUtils.printLn("Class '" + className + "' not found in the file");
+            DebugUtils.printLn("Exiting...");
+            return;
+        }
+
+
         MethodDeclaration testedMethod = null;
 
-        for (MethodDeclaration m : comp.findAll(MethodDeclaration.class)) {
-            if (m.getNameAsString().equals("coveredCondition")) {
-                DebugUtils.printLn("The class cannot contain method 'coveredCondition', please change it to other name");
-                DebugUtils.printLn("Exiting...");
-                return;
-            } else if (m.getNameAsString().equals("coveredBranch")) {
-                DebugUtils.printLn("The class cannot contain method 'coveredBranch', please change it to other name");
-                DebugUtils.printLn("Exiting...");
-                return;
-            } else if (m.isPublic() && m.getNameAsString().equals(methodName)) {
-                testedMethod = m;
+
+        for (MethodDeclaration m : cls.findAll(MethodDeclaration.class)) {
+            if (m.isPublic() && m.getNameAsString().equals(methodName)) {
+                if(inputMethodParameters==null) {  
+                  testedMethod = m;
+                  break;
+
+                } else if( m.getParameters().size() == inputMethodParameters.length) {
+                  //test if the parameters match
+                  boolean paramsMatch = true;
+                  NodeList<Parameter> methodParams = m.getParameters();
+
+                  for (int i = 0; i < methodParams.size(); i++) {
+                    if(!methodParams.get(i).toString().equals(inputMethodParameters[i])){
+                      paramsMatch = false;
+                    }
+                  }
+                  if(paramsMatch) {
+                    testedMethod = m;
+                    break;
+                  }
+                  
+                  
+                }
+                
             }
         }
         if (testedMethod == null) {
-            DebugUtils.printLn("No public method called '" + methodName + "' found");
+            if (inputMethodParameters == null) {
+                DebugUtils.printLn("No public method called '" + methodName + "' found");
+            } else {
+                DebugUtils.printLn("No public method called '" + methodName + "' with given parameters found");
+            }
+
             DebugUtils.printLn("Exiting...");
             return;
+
+        } else if (testedMethod.getParameterByName("coveredBranches").isPresent()) {
+            DebugUtils.printLn("Method cannot have parameter called 'coveredBranches'");
+            DebugUtils.printLn("Exiting...");
+            return;
+
+        } else if (testedMethod.getParameterByName("coveredConditions").isPresent()) {
+            DebugUtils.printLn("Method cannot have parameter called 'coveredConditions'");
+            DebugUtils.printLn("Exiting...");
+            return;
+
         } else {
-            DebugUtils.printLn("Loaded the method");
+            DebugUtils.printLn("Loaded the method: '"+testedMethod.getDeclarationAsString()+"'");
+
         }
 
         DebugUtils.printLn("Adding required code to the class...");
 
         ArrayList<Integer[]> branchPredicateConditions = new ArrayList<Integer[]>();
-        int[] result = prepareMethod(testedMethod, comp, branchPredicateConditions);
+        int[] result = prepareMethod(testedMethod, branchPredicateConditions);
 
         branchCounter = result[0];
         condCounter = result[1];
 
         
 
-        ClassOrInterfaceDeclaration cls = comp.getClassByName(className).get();
 
         // add 2 static public fields telling number of branches and conditions
         FieldDeclaration fd = cls.addPublicField(Integer.class, "numberOfBranches");
@@ -285,8 +345,19 @@ public class Parse {
         comp.removePackageDeclaration();
         comp.setPackageDeclaration("input");
 
+        // https://stackabuse.com/how-to-get-current-date-and-time-in-java/
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+        // document time the file was created
+        Comment clsComment = new BlockComment();
+        clsComment.setContent("\nParsed file, generated at: " + formatter.format(date)+"\n");
+        cls.setComment(clsComment);
+
+
         // save the class to a file
-        File file = new File(".\\src\\main\\java\\input\\" + className + ".java");
+        char separator = File.separatorChar;
+        File file = new File("."+separator+"src"+separator+"main"+separator+"java"+separator+"input"+separator + className + ".java");
         try {
             file.createNewFile();
 
