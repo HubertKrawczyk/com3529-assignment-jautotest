@@ -1,7 +1,7 @@
 package input;
 
 import java.util.Set;
-import com.mycompany.app.CoverageUtils;
+import jautotest.app.CoverageUtils;
 
 public class BMICalculatorNonStatic {
 

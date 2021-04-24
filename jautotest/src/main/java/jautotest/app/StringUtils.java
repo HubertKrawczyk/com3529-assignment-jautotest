@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package jautotest.app;
 
 import java.util.ArrayList;
 
@@ -82,6 +82,9 @@ public class StringUtils {
         break;
         case DIGITS:
         range = "0123456789";
+        break;
+        case ASCII:
+        // handled in for loop
         break;
     }
     int stringLen = (int)NumberUtils.getRandomDouble(min,max);

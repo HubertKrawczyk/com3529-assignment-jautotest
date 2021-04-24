@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package jautotest.app;
 
 import java.io.File;
 import java.io.FileWriter;

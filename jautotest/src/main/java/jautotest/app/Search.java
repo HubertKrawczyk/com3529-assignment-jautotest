@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package jautotest.app;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;

@@ -1,6 +1,6 @@
-package com.mycompany.app;
+package jautotest.app;
 
-import com.mycompany.app.StringUtils.StringCharTypes;
+import jautotest.app.StringUtils.StringCharTypes;
 
 /** 
  * Contains useful numberical and other methods

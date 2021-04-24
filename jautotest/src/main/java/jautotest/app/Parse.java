@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package jautotest.app;
 
 import java.util.ArrayList;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package jautotest.app;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -12,7 +12,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.mycompany.app.StringUtils.StringCharTypes;
+import jautotest.app.StringUtils.StringCharTypes;
 
 /** 
  * Random search approach to find test cases
@@ -390,7 +390,7 @@ public class RandomSearch extends Search {
                     // success
                     toBeAdded = true;
                     coveredMasterConditions.add(condition);
-                    break;
+                    //break;
                   }
                 } else { 
                   // predicate was evaluated false (did not reach this branch-block)
@@ -400,7 +400,7 @@ public class RandomSearch extends Search {
                     // success
                     toBeAdded = true;
                     coveredMasterConditions.add(condition);
-                    break;
+                    //break;
                   }
                 }
               }
