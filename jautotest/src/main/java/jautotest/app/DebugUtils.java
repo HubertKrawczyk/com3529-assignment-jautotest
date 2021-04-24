@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package jautotest.app;
 
 /** 
  * Contains useful debug methods
