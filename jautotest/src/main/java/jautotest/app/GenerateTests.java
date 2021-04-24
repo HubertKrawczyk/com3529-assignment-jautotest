@@ -224,7 +224,7 @@ public class GenerateTests {
         String testClassName = cls.getSimpleName() + StringUtils.capitalize(meth.getName()) + "Test";
         // work on a a basic class, add test cases
         String dataString = 
-                "package com.mycompany.app; // please remove/change this line if used outside of this application\n"+
+                "package " +GenerateTests.class.getPackageName()+".tests; // please remove/change this line if used outside of this application\n"+
                 "import static org.junit.Assert.assertTrue;\n" +
                 "import org.junit.Test;\n" +
                 "public class " + testClassName + "{}";
@@ -317,7 +317,7 @@ public class GenerateTests {
 
         // create the file
         char separator = File.separatorChar;
-        File file = new File("."+separator+"src"+separator+"test"+separator+"java"+separator+"com"+separator+"mycompany"+separator+"app"+separator + testClassName + ".java");
+        File file = new File("."+separator+"src"+separator+"test"+separator+"java"+separator+"jautotest"+separator+"app"+separator + "tests" + separator + testClassName + ".java");
         try {
             file.createNewFile();
 
