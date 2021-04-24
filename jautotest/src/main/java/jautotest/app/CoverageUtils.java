@@ -38,4 +38,8 @@ public class CoverageUtils {
     }
     return predicate;
   }
+
+  public static boolean coveredPredicate(boolean predicate, int id, Set<Integer> coveredConditions) {
+    return coveredCondition(predicate, id, coveredConditions);
+  }
 }

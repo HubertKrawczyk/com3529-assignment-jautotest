@@ -53,6 +53,7 @@ public class RandomSearch extends Search {
           if (lowerBoundsInts[i] > upperBoundsInts[i]) {
             DebugUtils.printLn("ERROR: lower bound cannot be greater than upper bound!");
             i--;
+            continue;
           }
         } else if (type.equals("double") || type.equals("float")) {
           if (type.equals("float")) {
@@ -65,14 +66,15 @@ public class RandomSearch extends Search {
           if (lowerBoundsDouble[i] > upperBoundsDouble[i]) {
             DebugUtils.printLn("ERROR: lower bound cannot be greater than upper bound!");
             i--;
+            continue;
           }
         } else if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
-          DebugUtils.printLn("Next type is boolean, no need for lower/upper bounds");
+          DebugUtils.printLn("No need for lower/upper bounds");
         } else if (type.equals("java.lang.String")) {
           DebugUtils.printLn(
-              "Next type is java.lang.String, Strings will be generated randomly, character range as well as min/max string lengths need to be specified.");
+              "Strings will be generated randomly, character range as well as min/max string lengths need to be specified.");
           DebugUtils.printLn(
-              "Please character types:\n 1 -> alphabet(upper and lowercase),\n 2 -> alphabet with digits,\n 3 -> digits,\n 4 -> ASCII characters");
+              "Choose String type:\n 1 -> alphabet(upper and lowercase),\n 2 -> alphabet with digits,\n 3 -> digits,\n 4 -> ASCII characters");
           int choice = keyboard.nextInt();
           switch (choice) {
           case 1:
@@ -90,6 +92,7 @@ public class RandomSearch extends Search {
           default:
             DebugUtils.printLn("ERROR: invalid choice");
             i--;
+            continue;
           }
           if (stringCharTypes[i] != null) {
             DebugUtils.printLn("Please provide min string lenght value");
@@ -142,6 +145,8 @@ public class RandomSearch extends Search {
    */
   public boolean search(Scanner keyboard) {
 
+    DebugUtils.printLn("RandomSearch start\n");
+
     Method meth = this.testedMethod;
     Class<?> cls = this.testedClass;
 
@@ -150,7 +155,7 @@ public class RandomSearch extends Search {
     Class<?>[] methArgsTypes = meth.getParameterTypes();
     Parameter[] methParams = meth.getParameters();
 
-    int numberOfParams = methArgsTypes.length - 2; // ignore the last 2 added during parsing
+    int numberOfParams = methArgsTypes.length - Parse.ADDED_PARAMS; // ignore the last params added during parsing
 
     for (int i = 0; i < numberOfParams; i++) {
         paramNames.add(methParams[i].toString());
@@ -177,9 +182,10 @@ public class RandomSearch extends Search {
 
     if (!isStatic) {
       // choose the constructor
+      DebugUtils.printLn("Method is not static, a  constructor is required");
       Constructor[] constructors = cls.getConstructors();
       if (constructors.length == 1) {
-        DebugUtils.printLn("Only one constructor found");
+        DebugUtils.printLn("Only one constructor found: '"+constructors[0]+"'");
         this.chosenConstructor = constructors[0];
       } else {
         DebugUtils.printLn("Available constructors: " + constructors.length);
@@ -204,7 +210,7 @@ public class RandomSearch extends Search {
           DebugUtils.printLn("Exiting...");
           return false;
         }
-
+        
       }
 
       constructorLowerBoundsInts = new int[chosenConstructor.getParameterCount()];
@@ -233,25 +239,19 @@ public class RandomSearch extends Search {
           }
         }
       }
+      DebugUtils.printLn("");
     }
 
     // choose parameters range for the method call
-    DebugUtils.printLn("Please specify parameters for METHOD CALL");
+    DebugUtils.printLn("Please specify parameters for METHOD CALL\n");
     if(!readValues(keyboard, paramTypes, paramNames, numberOfParams, paramsLowerBoundsInts,
         paramsUpperBoundsInts, paramsLowerBoundsDouble, paramsUpperBoundsDouble, paramsStringCharTypes)){
           return false;
     }
 
-    DebugUtils.printLn("Please specify number of iterations:");
-    int numOfIterations = keyboard.nextInt();
-    if (numOfIterations < 0) {
-      DebugUtils.printLn("ERROR: number of iterations must be positive!");
-      DebugUtils.printLn("Exiting...");
-      return false;
-    }
-
     
     if (!isStatic) {
+      DebugUtils.printLn("");
       // choose parameters range for the constructor call
       Parameter[] constructorParams = chosenConstructor.getParameters();
       constructorParamNames = new ArrayList<String>();
@@ -268,6 +268,23 @@ public class RandomSearch extends Search {
           constructorUpperBoundsDouble, constructorStringCharTypes)) {
         return false;
       }
+      DebugUtils.printLn("");
+    }
+
+    int numOfIterations;
+
+    DebugUtils.printLn("Please specify number of iterations:");
+    try{
+      numOfIterations = keyboard.nextInt();
+    } catch(Exception e) {
+      DebugUtils.printLn("ERROR: invalid value");
+      DebugUtils.printLn("Exiting...");
+      return false;
+    }
+    if (numOfIterations < 0) {
+      DebugUtils.printLn("ERROR: number of iterations must be positive!");
+      DebugUtils.printLn("Exiting...");
+      return false;
     }
 
     // read the data about number of branches and conditions from the parsed file
@@ -304,6 +321,7 @@ public class RandomSearch extends Search {
     // keep track of predicates and conditions results for each saved run (cMCDC)
     ArrayList<TreeSet<Integer>> successfulCoveredBranchesArchive = new ArrayList<TreeSet<Integer>>();
     ArrayList<TreeSet<Integer>> successfulCoveredConditionsArchive = new ArrayList<TreeSet<Integer>>();
+    ArrayList<TreeSet<Integer>> successfulCoveredPredicatesArchive = new ArrayList<TreeSet<Integer>>();
 
     this.successfulInputs = new ArrayList<Object[]>();
     if (!isStatic) {
@@ -311,7 +329,7 @@ public class RandomSearch extends Search {
     }
     this.successfulOutputs = new ArrayList<Object>();
 
-    int actualNumberOfParams = numberOfParams + 2; // include Set<Integer> coveredBranches and Set<Integer> coveredConditions
+    int actualNumberOfParams = numberOfParams + Parse.ADDED_PARAMS; // include Set<Integer> coveredBranches and Set<Integer> coveredConditions
 
     int progressBarSteps = 30;
     boolean showProgressbar = numOfIterations > 10000;
@@ -353,8 +371,10 @@ public class RandomSearch extends Search {
       // invoke the method
       TreeSet<Integer> newCoveredBranches = new TreeSet<Integer>();
       TreeSet<Integer> newCoveredConditions = new TreeSet<Integer>();
-      arguments[actualNumberOfParams - 2] = newCoveredBranches;
-      arguments[actualNumberOfParams - 1] = newCoveredConditions;
+      TreeSet<Integer> newCoveredPredicates = new TreeSet<Integer>();
+      arguments[actualNumberOfParams - 3] = newCoveredBranches;
+      arguments[actualNumberOfParams - 2] = newCoveredConditions;
+      arguments[actualNumberOfParams - 1] = newCoveredPredicates;
       Object invokeResult;
       try {
         invokeResult = meth.invoke(invokedObject, arguments);
@@ -364,52 +384,94 @@ public class RandomSearch extends Search {
       }
       
 
-      // check for new cMCDC coverage
+      //// check for new cMCDC coverage ////
       boolean toBeAdded = false;
 
-      // loop over the all possible conditions
+      // loop over the all conditions
       for (int condition = 1; condition < numOfConditions + 1; condition++) {
-        // check if the condition was ever reached in this run (and thus evaluated true or false)
+
+        // skip if condition is already covered
+        if (coveredMasterConditions.contains(Math.abs(condition))) {
+          continue;
+        }
+        
+        int predicateNumber = whichPredicate[condition];
+
+        // check if is the cMCDC condition is meet with just this single run (possible if there is a loop)
+        if(newCoveredConditions.contains(condition)&&newCoveredConditions.contains(-condition)&&
+        newCoveredPredicates.contains(predicateNumber)&&newCoveredPredicates.contains(-predicateNumber)){
+          toBeAdded = true;
+          coveredMasterConditions.add(condition);
+          continue;
+        }
+
+        //check if this condition was ever evalueted (past, saved):
         if (coveredConditions.contains(condition) || coveredConditions.contains(-condition)) {
 
-          // check if this master condition is not already covered
-          if (!coveredMasterConditions.contains(Math.abs(condition))) {
+          //loop over all saved runs
+          for (int j = 0; j < successfulInputs.size(); j++) {
 
-            // check against all saved runs
-            for (int j = 0; j < successfulInputs.size(); j++) {
+            //////////////in current run condition was evaluated true?
+            if(newCoveredConditions.contains(condition)) {
 
-              Integer negCondition = -condition;
-              // check if the same condition was evaluated differently
-              if (successfulCoveredConditionsArchive.get(j).contains(negCondition)) {
-                // check what is the result of the predicate (in current run)
-                if (coveredBranches.contains(whichPredicate[Math.abs(condition)])) { 
-                  // predicate was evaluated true
+              if(newCoveredPredicates.contains(predicateNumber)) {
+                // in current run condition predicate was evaluated true
 
-                  // check if the predicate for the archived run was evaluated false
-                  if (!successfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])) {
-                    // success
-                    toBeAdded = true;
-                    coveredMasterConditions.add(condition);
-                    //break;
-                  }
-                } else { 
-                  // predicate was evaluated false (did not reach this branch-block)
 
-                  // check if the predicate for the archived run was evaluated true
-                  if (successfulCoveredBranchesArchive.get(j).contains(whichPredicate[Math.abs(condition)])) {
-                    // success
-                    toBeAdded = true;
-                    coveredMasterConditions.add(condition);
-                    //break;
-                  }
+                if(successfulCoveredConditionsArchive.get(j).contains(-condition)&&
+                successfulCoveredPredicatesArchive.get(j).contains(-predicateNumber)){
+                  toBeAdded = true;
+                  coveredMasterConditions.add(condition);
+                  //break
                 }
               }
+
+              if(newCoveredPredicates.contains(-predicateNumber)) {
+                // in current run condition predicate was evaluated false
+
+                
+                if(successfulCoveredConditionsArchive.get(j).contains(-condition)&&
+                successfulCoveredPredicatesArchive.get(j).contains(predicateNumber)){
+                  toBeAdded = true;
+                  coveredMasterConditions.add(condition);
+                  //break
+                }
+              }
+
+            }
+            //////////////in current run condition was evaluated false?
+            if(newCoveredConditions.contains(-condition)) {
+
+              if(newCoveredPredicates.contains(predicateNumber)) {
+                // in current run condition predicate was evaluated true
+
+
+                if(successfulCoveredConditionsArchive.get(j).contains(condition)&&
+                successfulCoveredPredicatesArchive.get(j).contains(-predicateNumber)){
+                  toBeAdded = true;
+                  coveredMasterConditions.add(condition);
+                  //break
+                }
+              }
+
+              if(newCoveredPredicates.contains(-predicateNumber)) {
+                // in current run condition predicate was evaluated false
+
+                
+                if(successfulCoveredConditionsArchive.get(j).contains(condition)&&
+                successfulCoveredPredicatesArchive.get(j).contains(predicateNumber)){
+                  toBeAdded = true;
+                  coveredMasterConditions.add(condition);
+                  //break
+                }
+              }
+
             }
 
           }
         }
-
       }
+      /// cMCDC coverage check end ////
 
       if (toBeAdded || addsNewElements(coveredBranches, newCoveredBranches)
           || addsNewElements(coveredConditions, newCoveredConditions)) {
@@ -425,11 +487,12 @@ public class RandomSearch extends Search {
 
         successfulCoveredBranchesArchive.add(newCoveredBranches);
         successfulCoveredConditionsArchive.add(newCoveredConditions);
+        successfulCoveredPredicatesArchive.add(newCoveredPredicates);
 
         DebugUtils.print("Added input:");
-        for (int argNo = 0; argNo < arguments.length - 2; argNo++) {
+        for (int argNo = 0; argNo < arguments.length - Parse.ADDED_PARAMS; argNo++) {
           DebugUtils.print(arguments[argNo]);
-          if (argNo < arguments.length - 3) {
+          if (argNo < arguments.length - Parse.ADDED_PARAMS-1) {
             DebugUtils.print(", ");
           }
         }

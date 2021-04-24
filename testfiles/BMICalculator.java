@@ -1,3 +1,4 @@
+// By Phil McMinn https://mcminn.io/ , available here: https://github.com/philmcminn/com3529-code
 package testfiles;
 
 public class BMICalculator {

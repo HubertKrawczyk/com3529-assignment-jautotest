@@ -32,7 +32,7 @@ public class GenerateTests {
         }
         DebugUtils.printLn("GenerateTests start for arguments:");
         String originalClassName = args[0];
-        DebugUtils.printLn("className: " + originalClassName);
+        DebugUtils.printLn(" * className: '" + originalClassName + "'");
 
         String className = "input." + originalClassName;
         String methodName = args[1];
@@ -45,7 +45,7 @@ public class GenerateTests {
 
         }
 
-        DebugUtils.printLn("methodName: " + methodName);
+        DebugUtils.printLn(" * methodName: '" + methodName + "'");
         DebugUtils.printLn("");
 
         // access the class
@@ -68,12 +68,12 @@ public class GenerateTests {
                 if(inputMethodParameters==null) {  
                     testedMethod = m;
                     break;
-                } else if (m.getParameters().length - 2 == inputMethodParameters.length) {
+                } else if (m.getParameters().length - Parse.ADDED_PARAMS == inputMethodParameters.length) {
                     // test if the parameters match
                     boolean paramsMatch = true;
                     Parameter[] methodParams = m.getParameters();
 
-                    for (int i = 0; i < methodParams.length - 2 ; i++) {
+                    for (int i = 0; i < methodParams.length - Parse.ADDED_PARAMS ; i++) {
                         if (!methodParams[i].toString().equals(inputMethodParameters[i])) {
                             paramsMatch = false;
                         }
@@ -105,7 +105,7 @@ public class GenerateTests {
             ArrayList<String> paramNames = new ArrayList<String>();
             ArrayList<String> paramTypes = new ArrayList<String>();
 
-            int numberOfParams = argsTypes.length - 2; // ignore the last 2 added during parsing
+            int numberOfParams = argsTypes.length - Parse.ADDED_PARAMS; // ignore the last params added during parsing
 
             // check method parameters
             for (int i = 0; i < numberOfParams; i++) {
@@ -132,14 +132,13 @@ public class GenerateTests {
             DebugUtils.printLn("Parameters Checked");
             DebugUtils.printLn("Number of parameters: " + numberOfParams);
             DebugUtils.printLn("Parameters types in order: " + paramTypes);
-
+            DebugUtils.printLn("");
             Scanner keyboard = new Scanner(System.in);
             DebugUtils.printLn("- (1) Enter '1' if random search with upper/lower bounds should be applied");
             String keyInput = keyboard.nextLine();
 
             Search search;
             if (keyInput.equals("1")) {
-                DebugUtils.printLn("(1) chosen");
                 search = new RandomSearch(testedMethod, cls);
                 if (!search.search(keyboard)) {
                     keyboard.close();
@@ -265,10 +264,10 @@ public class GenerateTests {
                 testedMethodCallOriginal = cls.getSimpleName() + "." + meth.getName() + "(";
             }
             Object[] arguments = inputs.get(i);
-            testedMethodCallOriginal += StringUtils.paramsIntoString(Arrays.copyOfRange(arguments , 0, arguments.length - 2),
+            testedMethodCallOriginal += StringUtils.paramsIntoString(Arrays.copyOfRange(arguments , 0, arguments.length - Parse.ADDED_PARAMS),
                     paramTypes);
 
-            testedMethodCall = testedMethodCallOriginal + ", null, null);\n";
+            testedMethodCall = testedMethodCallOriginal + ", null, null, null);\n";
             testedMethodCallOriginal += ");\n";
 
             methodString += "//Object result = " + testedMethodCallOriginal;

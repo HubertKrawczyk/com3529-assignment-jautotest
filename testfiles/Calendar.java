@@ -1,3 +1,4 @@
+// By Phil McMinn https://mcminn.io/ , available here: https://github.com/philmcminn/com3529-code
 package uk.ac.shef.com3529.lectures;
 
 public class Calendar {

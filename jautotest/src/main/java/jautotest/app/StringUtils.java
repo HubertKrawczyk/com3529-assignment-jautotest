@@ -96,7 +96,7 @@ public class StringUtils {
             };
             result+=c;
         }else{
-            result+=range.charAt((int)NumberUtils.getRandomDouble(0, range.length()-1));
+            result+=range.charAt((int)NumberUtils.getRandomDouble(0, range.length()));
         }
     }
     return result;

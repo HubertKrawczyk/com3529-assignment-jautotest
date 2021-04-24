@@ -32,6 +32,8 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
  */
 public class Parse {
 
+    public static int ADDED_PARAMS = 3; //coveredBranches, coveredConditions, coveredPredicates
+
     /**
      * Inserts coverage methods into the tested method
      * @param methodDeclaration Method Declaration
@@ -124,6 +126,8 @@ public class Parse {
                 conditionsForBranch.add(condCounter);
             }
 
+            newCond = Parse.class.getPackageName() +".CoverageUtils.coveredPredicate(("+newCond +"), "+branchCounter+", coveredPredicates)";
+
             ifStmt.setCondition(StaticJavaParser.parseExpression(newCond));
             
 
@@ -170,6 +174,7 @@ public class Parse {
 
         methodDeclaration.addParameter("java.util.Set<Integer>", "coveredBranches");
         methodDeclaration.addParameter("java.util.Set<Integer>", "coveredConditions");
+        methodDeclaration.addParameter("java.util.Set<Integer>", "coveredPredicates");
 
         DebugUtils.printLn("Method parsed successfully");
         result[0] = branchCounter;
@@ -178,7 +183,7 @@ public class Parse {
     }
 
     public static void main(String[] args) {
-        DebugUtils.printLn("GenerateTests start for arguments:");
+        DebugUtils.printLn("Parse start for arguments:");
 
         String dataString = "";
         String methodName = "";
@@ -194,9 +199,10 @@ public class Parse {
               methodName=methodName.substring(0, methodName.indexOf("("));
 
             }
-            DebugUtils.printLn("file path: '" + path + "'");
-            DebugUtils.printLn("class name: '" + className + "'");
-            DebugUtils.printLn("method name: '" + methodName + "'");
+            DebugUtils.printLn(" * file path: '" + path + "'");
+            DebugUtils.printLn(" * class name: '" + className + "'");
+            DebugUtils.printLn(" * method name: '" + methodName + "'");
+            DebugUtils.printLn("");
             
 
             try {
@@ -355,8 +361,22 @@ public class Parse {
         cls.setComment(clsComment);
 
 
-        // save the class to a file
         char separator = File.separatorChar;
+
+        // check if there is any test for this class already, and remove it
+        DebugUtils.printLn("\nDeleting previously created test files with this class...");
+        File testsFolder = new File("."+separator+"src"+separator+"test"+separator+"java"+separator+"jautotest"+separator+"app"+separator + "tests");
+        for (File file : testsFolder.listFiles()) {
+                if (file.getName().indexOf(className)!=-1) {
+                    DebugUtils.printLn("Deleting test file: " +file.getName());
+                    file.delete();
+                } 
+        }
+        DebugUtils.printLn("Done\n");
+
+    
+    
+        // save the new class to a file
         File file = new File("."+separator+"src"+separator+"main"+separator+"java"+separator+"input"+separator + className + ".java");
         try {
             file.createNewFile();
@@ -365,6 +385,7 @@ public class Parse {
             writer.write(comp.toString());
             writer.close();
             DebugUtils.printLn("Saved the file successfully.");
+            DebugUtils.printLn("File location: " + file.getAbsolutePath() + "\n(Do not modify)");
         } catch (IOException e) {
             DebugUtils.printLn("An error occured during saving the file");
             e.printStackTrace();
