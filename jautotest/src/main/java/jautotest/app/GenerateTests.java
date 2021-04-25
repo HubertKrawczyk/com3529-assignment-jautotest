@@ -69,7 +69,7 @@ public class GenerateTests {
                     testedMethod = m;
                     break;
                 } else if (m.getParameters().length - Parse.ADDED_PARAMS == inputMethodParameters.length) {
-                    // test if the parameters match
+                    // check if the parameters match
                     boolean paramsMatch = true;
                     Parameter[] methodParams = m.getParameters();
 
@@ -114,14 +114,18 @@ public class GenerateTests {
                 paramTypes.add(paramType);
                 if (!(paramType.equals("int") || paramType.equals("double") || paramType.equals("boolean")
                         || paramType.equals("byte") || paramType.equals("short") || paramType.equals("char")
-                        || paramType.equals("flaot") || paramType.equals("java.lang.Boolean")
+                        || paramType.equals("float") || paramType.equals("java.lang.Boolean")
                         || paramType.equals("java.lang.String"))) {
                     DebugUtils.printLn("Unsupported parameter type '" + paramType + "'");
                     DebugUtils.printLn(
                             "Supported types: int, byte, short, char, double, float, boolean, java.lang.Boolean, java.lang.String");
                     if (!argsTypes[i].isPrimitive()) {
                         DebugUtils.printLn("'null' will be used");
-                    } else { // long
+                    }
+                    else if(paramType.equals("long")){
+                        DebugUtils.printLn("int will be used to store long values");
+                    }
+                    else {
                         DebugUtils.printLn("'Exiting");
                         return;
                     }
@@ -165,7 +169,7 @@ public class GenerateTests {
 
 
     /**
-     * displays information about the achieved coverages and creates unit tests file
+     * Displays information about the achieved coverages and creates unit tests file
      */
     static boolean generateTests(Method meth, Class<?> cls, ArrayList<String> paramTypes, Search search) {
         ArrayList<Object[]> inputs = search.getSuccessfulInputs();
@@ -245,30 +249,35 @@ public class GenerateTests {
             String methodString = "public void test" + (i + 1) + "()\n" + "{\n";
 
             if (!isStatic) { // need to use constructor
+                // original call:
                 methodString += "//" + cls.getSimpleName() + " testedObject = new " + cls.getSimpleName() + "(";
                 methodString += StringUtils.paramsIntoString(constructorInputs.get(i), constructorParamTypes);
                 methodString += ");\n";
+                // parsed class call:
                 methodString += cls.getName() + " testedObject = new " + cls.getName() + "(";
                 methodString += StringUtils.paramsIntoString(constructorInputs.get(i), constructorParamTypes);
                 methodString += ");\n";
             }
 
             // first call (testedMethodCallOriginal) will work with the original code
-            // second call (testedMethodCall) will work with the parsed code (with "input."
-            // prefix) and require 2 more parameters (which can be null)
+            // second call (testedMethodCall) will work with the parsed code (with "input." prefix) 
+            // and requires 3 more parameters (which can be null in tests)
             String testedMethodCallOriginal;
             String testedMethodCall;
             if (!isStatic) {
+                // call from constructed object (object.tested_method())
                 testedMethodCallOriginal = "testedObject" + "." + meth.getName() + "(";
             } else {
+                // call from class (Class.static_method())
                 testedMethodCallOriginal = cls.getSimpleName() + "." + meth.getName() + "(";
             }
+
             Object[] arguments = inputs.get(i);
             testedMethodCallOriginal += StringUtils.paramsIntoString(Arrays.copyOfRange(arguments , 0, arguments.length - Parse.ADDED_PARAMS),
                     paramTypes);
 
             testedMethodCall = testedMethodCallOriginal + ", null, null, null);\n";
-            testedMethodCallOriginal += ");\n";
+            testedMethodCallOriginal = testedMethodCallOriginal + ");\n";
 
             methodString += "//Object result = " + testedMethodCallOriginal;
             if (isStatic) {
@@ -278,14 +287,16 @@ public class GenerateTests {
             }
             methodString += "// remove the line above and uncomment upper one to test original code\n";
 
-            // asertion
+            // assertation
             if (meth.getReturnType().getName().equals("char")) {
                 methodString += "assertTrue(result.equals((char)" + (int) (char) outputs.get(i) + "));\n";
 
             } else if (meth.getReturnType().isPrimitive() || meth.getReturnType().getName().equals("java.lang.Integer")
-                    || meth.getReturnType().getName().equals("java.lang.Boolean")) {
+                    || meth.getReturnType().getName().equals("java.lang.Boolean")
+                    || meth.getReturnType().getName().equals("java.lang.Double")
+                    || meth.getReturnType().getName().equals("java.lang.Float")) {
                 methodString += "assertTrue(result.equals(" + outputs.get(i) + "));\n";
-
+                
             } else if (meth.getReturnType().isEnum()) {
                 String enumName = meth.getReturnType().getCanonicalName();
                 if (meth.getReturnType().getPackageName().equals("input")) {

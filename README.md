@@ -25,7 +25,7 @@ Java 11 or newer (was tested with versions 11.0.10 and 13.0.1)
 
 Maven (was tested with Apache Maven 3.6.3)
 
-1. Navigate to "/jautotest" and use `mvn install`
+1. Navigate to "/jautotest" and use `mvn package`
 
 
 ### 1 Prepare (parse) the file
@@ -43,6 +43,13 @@ for example:
 mvn exec:java "-Dexec.mainClass=jautotest.app.Parse" "-Dexec.args='../testfiles/BMICalculator.java' 'BMICalculator' 'calculate'" -e
 ```
 
+3. Use
+
+``` bash
+mvn compile
+```
+
+to make sure the parsed class is readable by the program.
 ### 2 Generate tests
 1. The previous step needs to be fulfilled before generating tests.
 2. Navigate to "/jautotest"
@@ -73,9 +80,9 @@ mvn test -Dtest=BMICalculatorCalculateTest
 
 ### Problems, limitations, notes
 #### Forbidden keywords
-The tested method cannot have parameters with names: <span style="color:red">coveredBranches</span> and <span style="color:red">coveredConditions</span> .
+The tested method cannot have parameters with names: *<span style="color:red">coveredBranches</span>* and *<span style="color:red">coveredConditions</span>* .
 
-The tested class cannot have variables with names: <span style="color:red">numberOfBranches</span>, <span style="color:red">numberOfConditions</span>  and <span style="color:red">branchesPredicatesConditions</span>.
+The tested class cannot have variables with names: *<span style="color:red">numberOfBranches</span>*, *<span style="color:red">numberOfConditions</span>* and *<span style="color:red">branchesPredicatesConditions</span>*.
 
 #### Multiple methods with the same name
 The program takes the first public method with matching name. The problem arises if there are many methods with the same name. To specify which method should be chosen, its parameters need to be specified. In place of *METHOD_NAME* please put method declaration structure like: `calculate(double weightInPounds, int heightFeet, int heightInches)`

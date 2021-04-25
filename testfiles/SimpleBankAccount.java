@@ -6,10 +6,14 @@ public class SimpleBankAccount{
 
   final int WITHDRAW_COST = 10;
 
-  public SimpleBankAccount(String name, int coins, boolean vipAccount){
-    this.name = name;
-    this.coins = coins;
-    this.vipAccount = vipAccount;
+  public SimpleBankAccount(String name, int coins, boolean vipAccount) {
+      this(coins, vipAccount);
+      this.name = name;
+  }
+
+  public SimpleBankAccount(int coins, boolean vipAccount) {
+      this.coins = coins;
+      this.vipAccount = vipAccount;
   }
 
   public boolean withdrawCoins(int withdrawValue) {

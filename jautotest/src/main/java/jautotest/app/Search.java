@@ -8,7 +8,7 @@ import java.util.Set;
 
 public abstract class Search {
 
-  Constructor chosenConstructor;
+  Constructor<?> chosenConstructor;
   Method testedMethod;
   Class<?> testedClass;
   ArrayList<Object[]> successfulInputs;
@@ -36,7 +36,7 @@ public abstract class Search {
   public Set<Integer> getCoveredMasterConditions(){
     return coveredMasterConditions;
   }
-  public Constructor getChosenConstructor(){
+  public Constructor<?> getChosenConstructor(){
     return chosenConstructor;
   }
   public Search(Method testedMethod, Class<?> testedClass){
