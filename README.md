@@ -84,6 +84,8 @@ The tested method cannot have parameters with names: *<span style="color:red">co
 
 The tested class cannot have variables with names: *<span style="color:red">numberOfBranches</span>*, *<span style="color:red">numberOfConditions</span>* and *<span style="color:red">branchesPredicatesConditions</span>*.
 
+In parsing process the tested class package is changed to "input", make sure it does not affect your code.
+
 #### Multiple methods with the same name
 The program takes the first public method with matching name. The problem arises if there are many methods with the same name. To specify which method should be chosen, its parameters need to be specified. In place of *METHOD_NAME* please put method declaration structure like: `calculate(double weightInPounds, int heightFeet, int heightInches)`
 
@@ -150,7 +152,77 @@ Test file generated automatically at 24-04-2021 18:47:14, please check the asser
 
 The obious reason is that conditions 2 (bmi >= 17.5) and 4 (bmi >= 25) can never be evaluated false.
 
+<details>
+<summary>See full example generated test file</summary>
+<p>
 
+```java
+// please remove/change this line if used outside of this application
+package jautotest.app.tests;
+
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+/*
+Branch coverage: 100,00% (4/4)
+Branch coverage - covered branches: [1, 2, 3, 4]
+
+Condition coverage: 80,00% (8/10)
+Condition coverage - covered conditions: [-5, -3, -1, 1, 2, 3, 4, 5]
+
+Correlated MCDC coverage: 60,00% (3/5)
+Correlated MCDC - covered conditions: [1, 3, 5]
+
+Number of tests generated: 4
+Test file generated automatically at 26-04-2021 12:47:09, please check the assertations.
+*/
+public class BMICalculatorCalculateTest {
+
+    @Test()
+    public void test1() {
+        // Object result = BMICalculator.calculate(87.32045359488193, 72, 53);
+        Object result = input.BMICalculator.calculate(87.32045359488193, 72, 53, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(BMICalculator.Type.UNDERWEIGHT))
+        assertTrue(result.equals(input.BMICalculator.Type.UNDERWEIGHT));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test2() {
+        // Object result = BMICalculator.calculate(98.59786459991898, 0, 7);
+        Object result = input.BMICalculator.calculate(98.59786459991898, 0, 7, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(BMICalculator.Type.OBESE))
+        assertTrue(result.equals(input.BMICalculator.Type.OBESE));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test3() {
+        // Object result = BMICalculator.calculate(81.21167804429088, 2, 21);
+        Object result = input.BMICalculator.calculate(81.21167804429088, 2, 21, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(BMICalculator.Type.OVERWEIGHT))
+        assertTrue(result.equals(input.BMICalculator.Type.OVERWEIGHT));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test4() {
+        // Object result = BMICalculator.calculate(63.05060856231389, 3, 7);
+        Object result = input.BMICalculator.calculate(63.05060856231389, 3, 7, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(BMICalculator.Type.NORMAL))
+        assertTrue(result.equals(input.BMICalculator.Type.NORMAL));
+        // remove the line above and uncomment upper one to test original code
+    }
+}
+
+```
+
+</p>
+</details>  
 
 
 #### SimpleBankAccount
@@ -176,15 +248,217 @@ This example demonstrates that the program supports constructors and can test no
   }
 ``` 
 
+<details>
+<summary>See full example generated test file</summary>
+<p>
+
+```java
+// please remove/change this line if used outside of this application
+package jautotest.app.tests;
+
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+/*
+Branch coverage: 100,00% (7/7)
+Branch coverage - covered branches: [1, 2, 3, 4, 5, 6, 7]
+
+Condition coverage: 100,00% (8/8)
+Condition coverage - covered conditions: [-4, -3, -2, -1, 1, 2, 3, 4]
+
+Correlated MCDC coverage: 100,00% (4/4)
+Correlated MCDC - covered conditions: [1, 2, 3, 4]
+
+Number of tests generated: 5
+Test file generated automatically at 26-04-2021 13:01:36, please check the assertations.
+*/
+public class SimpleBankAccountWithdrawCoinsTest {
+
+    @Test()
+    public void test1() {
+        // SimpleBankAccount testedObject = new SimpleBankAccount("Alog", 5, false);
+        input.SimpleBankAccount testedObject = new input.SimpleBankAccount("Alog", 5, false);
+        // Object result = testedObject.withdrawCoins(43);
+        Object result = testedObject.withdrawCoins(43, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(false));
+    }
+
+    @Test()
+    public void test2() {
+        // SimpleBankAccount testedObject = new SimpleBankAccount("KPhY", 8, true);
+        input.SimpleBankAccount testedObject = new input.SimpleBankAccount("KPhY", 8, true);
+        // Object result = testedObject.withdrawCoins(87);
+        Object result = testedObject.withdrawCoins(87, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(false));
+    }
+
+    @Test()
+    public void test3() {
+        // SimpleBankAccount testedObject = new SimpleBankAccount("mAku", 74, false);
+        input.SimpleBankAccount testedObject = new input.SimpleBankAccount("mAku", 74, false);
+        // Object result = testedObject.withdrawCoins(-88);
+        Object result = testedObject.withdrawCoins(-88, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(false));
+    }
+
+    @Test()
+    public void test4() {
+        // SimpleBankAccount testedObject = new SimpleBankAccount("saWm", 59, true);
+        input.SimpleBankAccount testedObject = new input.SimpleBankAccount("saWm", 59, true);
+        // Object result = testedObject.withdrawCoins(6);
+        Object result = testedObject.withdrawCoins(6, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(true));
+    }
+
+    @Test()
+    public void test5() {
+        // SimpleBankAccount testedObject = new SimpleBankAccount("qkVH", 91, false);
+        input.SimpleBankAccount testedObject = new input.SimpleBankAccount("qkVH", 91, false);
+        // Object result = testedObject.withdrawCoins(7);
+        Object result = testedObject.withdrawCoins(7, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(true));
+    }
+}
+
+```
+
+</p>
+</details>  
+
 #### RemoveNonAlphanumericChars
 
 
 ``` bash
 mvn exec:java "-Dexec.mainClass=jautotest.app.Parse" "-Dexec.args='../testfiles/TestFunctions.java' 'TestFunctions' 'removeNonAlphanumericChars'" -e
 ``` 
+
 ``` bash
 mvn exec:java "-Dexec.mainClass=jautotest.app.GenerateTests" "-Dexec.args='TestFunctions' 'removeNonAlphanumericChars'" -e
 ``` 
+
+<details>
+<summary>See full example generated test file</summary>
+<p>
+
+```java
+// please remove/change this line if used outside of this application
+package jautotest.app.tests;
+
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+/*
+Branch coverage: 100,00% (1/1)
+Branch coverage - covered branches: [1]
+
+Condition coverage: 100,00% (12/12)
+Condition coverage - covered conditions: [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]
+
+Correlated MCDC coverage: 100,00% (6/6)
+Correlated MCDC - covered conditions: [1, 2, 3, 4, 5, 6]
+
+Number of tests generated: 2
+Test file generated automatically at 26-04-2021 13:02:36, please check the assertations.
+*/
+public class TestFunctionsRemoveNonAlphanumericCharsTest {
+
+    @Test()
+    public void test1() {
+        // TestFunctions testedObject = new TestFunctions();
+        input.TestFunctions testedObject = new input.TestFunctions();
+        // Object result = testedObject.removeNonAlphanumericChars("?<*n9)f");
+        Object result = testedObject.removeNonAlphanumericChars("?<*n9)f", null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals("n9f"));
+    }
+
+    @Test()
+    public void test2() {
+        // TestFunctions testedObject = new TestFunctions();
+        input.TestFunctions testedObject = new input.TestFunctions();
+        // Object result = testedObject.removeNonAlphanumericChars("*2,?GvJS}R|\\\\q");
+        Object result = testedObject.removeNonAlphanumericChars("*2,?GvJS}R|\\\\q", null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals("2GvJSRq"));
+    }
+}
+
+```
+
+</p>
+</details>
+
+#### LongestRepetition
+
+
+``` bash
+mvn exec:java "-Dexec.mainClass=jautotest.app.Parse" "-Dexec.args='../testfiles/TestFunctions.java' 'TestFunctions' 'longestRepetition'" -e
+``` 
+
+``` bash
+mvn exec:java "-Dexec.mainClass=jautotest.app.GenerateTests" "-Dexec.args='TestFunctions' 'longestRepetition'" -e
+``` 
+
+<details>
+<summary>See full example generated test file</summary>
+<p>
+
+```java
+// please remove/change this line if used outside of this application
+package jautotest.app.tests;
+
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+/*
+Branch coverage: 100,00% (4/4)
+Branch coverage - covered branches: [1, 2, 3, 4]
+
+Condition coverage: 100,00% (6/6)
+Condition coverage - covered conditions: [-3, -2, -1, 1, 2, 3]
+
+Correlated MCDC coverage: 100,00% (3/3)
+Correlated MCDC - covered conditions: [1, 2, 3]
+
+Number of tests generated: 3
+Test file generated automatically at 26-04-2021 13:22:19, please check the assertations.
+*/
+public class TestFunctionsLongestRepetitionTest {
+
+    @Test()
+    public void test1() {
+        // Object result = TestFunctions.longestRepetition("mZtZdiNZJLXQhaMRdHAYOWZqNMyEiLSdTxuRaWibLGEHIejHaUibK", (char)61);
+        Object result = input.TestFunctions.longestRepetition("mZtZdiNZJLXQhaMRdHAYOWZqNMyEiLSdTxuRaWibLGEHIejHaUibK", (char) 61, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(0));
+    }
+
+    @Test()
+    public void test2() {
+        // Object result = TestFunctions.longestRepetition("KInkWnmOJcSbdRWADVHoRfVHxqHIYGYZnYLlRCCZiURNgmjHiZYAZcOLjOkvwLnnogYsEvecVMXscZCZzJwjrwQyty", (char)72);
+        Object result = input.TestFunctions.longestRepetition("KInkWnmOJcSbdRWADVHoRfVHxqHIYGYZnYLlRCCZiURNgmjHiZYAZcOLjOkvwLnnogYsEvecVMXscZCZzJwjrwQyty", (char) 72, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(1));
+    }
+
+    @Test()
+    public void test3() {
+        // Object result = TestFunctions.longestRepetition("", (char)87);
+        Object result = input.TestFunctions.longestRepetition("", (char) 87, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(0));
+    }
+}
+
+```
+
+</p>
+</details>
 
 #### CalendarDaysBetweenTwoDates
 
@@ -195,6 +469,134 @@ mvn exec:java "-Dexec.mainClass=jautotest.app.Parse" "-Dexec.args='../testfiles/
 mvn exec:java "-Dexec.mainClass=jautotest.app.GenerateTests" "-Dexec.args='Calendar' 'daysBetweenTwoDates'" -e
 ``` 
 
+<details>
+<summary>See full example generated test file</summary>
+<p>
+
+```java
+// please remove/change this line if used outside of this application
+package jautotest.app.tests;
+
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+/*
+Branch coverage: 100,00% (14/14)
+Branch coverage - covered branches: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+Condition coverage: 100,00% (36/36)
+Condition coverage - covered conditions: [-18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+Correlated MCDC coverage: 100,00% (18/18)
+Correlated MCDC - covered conditions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+Number of tests generated: 12
+Test file generated automatically at 26-04-2021 13:18:03, please check the assertations.
+*/
+public class CalendarDaysBetweenTwoDatesTest {
+
+    @Test()
+    public void test1() {
+        // Object result = Calendar.daysBetweenTwoDates(65, 12, 58, 91, 70, 97);
+        Object result = input.Calendar.daysBetweenTwoDates(65, 12, 58, 91, 70, 97, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(9496));
+    }
+
+    @Test()
+    public void test2() {
+        // Object result = Calendar.daysBetweenTwoDates(94, 95, 69, 85, 77, 18);
+        Object result = input.Calendar.daysBetweenTwoDates(94, 95, 69, 85, 77, 18, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(3300));
+    }
+
+    @Test()
+    public void test3() {
+        // Object result = Calendar.daysBetweenTwoDates(44, 74, 45, 91, 3, 75);
+        Object result = input.Calendar.daysBetweenTwoDates(44, 74, 45, 91, 3, 75, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(16891));
+    }
+
+    @Test()
+    public void test4() {
+        // Object result = Calendar.daysBetweenTwoDates(26, 1, 8, 17, 85, 14);
+        Object result = input.Calendar.daysBetweenTwoDates(26, 1, 8, 17, 85, 14, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(2947));
+    }
+
+    @Test()
+    public void test5() {
+        // Object result = Calendar.daysBetweenTwoDates(69, 64, 0, 83, 53, 55);
+        Object result = input.Calendar.daysBetweenTwoDates(69, 64, 0, 83, 53, 55, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(5143));
+    }
+
+    @Test()
+    public void test6() {
+        // Object result = Calendar.daysBetweenTwoDates(55, 48, 21, 55, 22, 45);
+        Object result = input.Calendar.daysBetweenTwoDates(55, 48, 21, 55, 22, 45, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(10));
+    }
+
+    @Test()
+    public void test7() {
+        // Object result = Calendar.daysBetweenTwoDates(75, 0, 68, 53, 57, 85);
+        Object result = input.Calendar.daysBetweenTwoDates(75, 0, 68, 53, 57, 85, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(7701));
+    }
+
+    @Test()
+    public void test8() {
+        // Object result = Calendar.daysBetweenTwoDates(20, 31, 38, 5, 73, 0);
+        Object result = input.Calendar.daysBetweenTwoDates(20, 31, 38, 5, 73, 0, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(5509));
+    }
+
+    @Test()
+    public void test9() {
+        // Object result = Calendar.daysBetweenTwoDates(57, 45, 84, 57, 27, 5);
+        Object result = input.Calendar.daysBetweenTwoDates(57, 45, 84, 57, 27, 5, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(26));
+    }
+
+    @Test()
+    public void test10() {
+        // Object result = Calendar.daysBetweenTwoDates(59, 86, 47, 37, 0, 26);
+        Object result = input.Calendar.daysBetweenTwoDates(59, 86, 47, 37, 0, 26, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(8374));
+    }
+
+    @Test()
+    public void test11() {
+        // Object result = Calendar.daysBetweenTwoDates(52, 3, 72, 52, 45, 32);
+        Object result = input.Calendar.daysBetweenTwoDates(52, 3, 72, 52, 45, 32, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(275));
+    }
+
+    @Test()
+    public void test12() {
+        // Object result = Calendar.daysBetweenTwoDates(2, 46, 36, 2, 3, 96);
+        Object result = input.Calendar.daysBetweenTwoDates(2, 46, 36, 2, 3, 96, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        assertTrue(result.equals(275));
+    }
+}
+
+```
+
+</p>
+</details>  
+
 #### Triangle
 
 ``` bash
@@ -203,3 +605,105 @@ mvn exec:java "-Dexec.mainClass=jautotest.app.Parse" "-Dexec.args='../testfiles/
 ``` bash
 mvn exec:java "-Dexec.mainClass=jautotest.app.GenerateTests" "-Dexec.args='Triangle' 'classify'" -e
 ``` 
+
+<details>
+<summary>See full example generated test file</summary>
+<p>
+
+```java
+// please remove/change this line if used outside of this application
+package jautotest.app.tests;
+
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+/*
+Branch coverage: 100,00% (9/9)
+Branch coverage - covered branches: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+Condition coverage: 100,00% (14/14)
+Condition coverage - covered conditions: [-7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7]
+
+Correlated MCDC coverage: 100,00% (7/7)
+Correlated MCDC - covered conditions: [1, 2, 3, 4, 5, 6, 7]
+
+Number of tests generated: 7
+Test file generated automatically at 26-04-2021 13:11:45, please check the assertations.
+*/
+public class TriangleClassifyTest {
+
+    @Test()
+    public void test1() {
+        // Object result = Triangle.classify(17, 99, 74);
+        Object result = input.Triangle.classify(17, 99, 74, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.INVALID))
+        assertTrue(result.equals(input.Triangle.Type.INVALID));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test2() {
+        // Object result = Triangle.classify(49, 15, 9);
+        Object result = input.Triangle.classify(49, 15, 9, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.INVALID))
+        assertTrue(result.equals(input.Triangle.Type.INVALID));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test3() {
+        // Object result = Triangle.classify(73, 33, 42);
+        Object result = input.Triangle.classify(73, 33, 42, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.SCALENE))
+        assertTrue(result.equals(input.Triangle.Type.SCALENE));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test4() {
+        // Object result = Triangle.classify(38, 57, 72);
+        Object result = input.Triangle.classify(38, 57, 72, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.SCALENE))
+        assertTrue(result.equals(input.Triangle.Type.SCALENE));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test5() {
+        // Object result = Triangle.classify(70, 70, 29);
+        Object result = input.Triangle.classify(70, 70, 29, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.ISOSCELES))
+        assertTrue(result.equals(input.Triangle.Type.ISOSCELES));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test6() {
+        // Object result = Triangle.classify(88, 70, 70);
+        Object result = input.Triangle.classify(88, 70, 70, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.SCALENE))
+        assertTrue(result.equals(input.Triangle.Type.SCALENE));
+        // remove the line above and uncomment upper one to test original code
+    }
+
+    @Test()
+    public void test7() {
+        // Object result = Triangle.classify(75, 75, 75);
+        Object result = input.Triangle.classify(75, 75, 75, null, null, null);
+        // remove the line above and uncomment upper one to test original code
+        // assertTrue(result.equals(Triangle.Type.EQUILATERAL))
+        assertTrue(result.equals(input.Triangle.Type.EQUILATERAL));
+        // remove the line above and uncomment upper one to test original code
+    }
+}
+
+```
+
+</p>
+</details>  
