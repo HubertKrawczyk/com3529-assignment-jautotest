@@ -53,7 +53,7 @@ public class GenerateTests {
         try {
             cls = Class.forName(className);
         } catch (ClassNotFoundException e) {
-            DebugUtils.printLn("ERROR: Invalid className, please parse the correct class file first!");
+            DebugUtils.printLn("ERROR: Invalid className, please parse the correct class file first! (don't forget to do 'mvn compile' after parsing)");
             DebugUtils.printLn("README contains neccessary instructions");
             DebugUtils.printLn("Exiting...");
             return;
