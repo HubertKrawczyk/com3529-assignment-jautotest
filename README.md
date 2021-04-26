@@ -87,7 +87,7 @@ The tested class cannot have variables with names: *<span style="color:red">numb
 In parsing process the tested class package is changed to "input", make sure it does not affect your code.
 
 #### Multiple methods with the same name
-The program takes the first public method with matching name. The problem arises if there are many methods with the same name. To specify which method should be chosen, its parameters need to be specified. In place of *METHOD_NAME* please put method declaration structure like: `calculate(double weightInPounds, int heightFeet, int heightInches)`
+The program takes the first public method with matching name. The problem arises if there are many methods with the same name. To specify which method should be chosen, its parameters need to be specified. In place of *METHOD_NAME* please put method declaration like: `calculate(double weightInPounds, int heightFeet, int heightInches)`
 
 The method for parsing 'BMICalculator' 'calculate' method becomes:
 
