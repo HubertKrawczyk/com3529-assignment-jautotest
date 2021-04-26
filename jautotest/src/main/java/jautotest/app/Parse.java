@@ -38,7 +38,7 @@ public class Parse {
      * Inserts coverage methods into the tested method
      * @param methodDeclaration Method Declaration
      * @branchPredicatesConditions An array which will be filled with values telling to which predicate each condition belongs
-     * @return an array with two values: 1st->number of branches in the method, 2nd -> number of conditions in the method
+     * @return an array with two values: [0] = number of branches in the method, [1] = number of conditions in the method
      */
     static int[] prepareMethod(MethodDeclaration methodDeclaration, ArrayList<Integer[]> branchPredicatesConditions) {
         int[] result = new int[2];
@@ -182,6 +182,10 @@ public class Parse {
         return result;
     }
 
+    /**
+     * 
+     * @param args [0] = path to class, [1] = class name, [2] = method name
+     */
     public static void main(String[] args) {
         DebugUtils.printLn("Parse start for arguments:");
 

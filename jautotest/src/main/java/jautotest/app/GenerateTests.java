@@ -20,8 +20,17 @@ import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.Comment;
 
 
+/**
+ * Class used to generate tests for a class method that was previously parsed
+ *
+ */
 public class GenerateTests {
 
+    /**
+     * Choose search method, perform the search, generate JUnit test files
+     * 
+     * @param args [0] = class name, [1] = method name
+     */
     public static void main(String[] args) {
 
         if (args.length != 2) {
